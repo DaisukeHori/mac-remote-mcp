@@ -1,56 +1,70 @@
 import Foundation
 
-// Simple test framework (no XCTest dependency for standalone builds)
-var totalTests = 0
-var passedTests = 0
-var failedTests = 0
-var currentGroup = ""
+@main
+struct TestRunner {
+    static var totalTests = 0
+    static var passedTests = 0
+    static var failedTests = 0
+    static var currentGroup = ""
 
-func describe(_ name: String, _ body: () -> Void) {
-    currentGroup = name
-    body()
-}
-
-func it(_ name: String, _ body: () throws -> Void) {
-    totalTests += 1
-    do {
-        try body()
-        passedTests += 1
-    } catch {
-        failedTests += 1
-        print("  ❌ \(currentGroup) > \(name)")
-        print("     \(error)")
+    static func describe(_ name: String, _ body: () -> Void) {
+        currentGroup = name
+        body()
     }
-}
 
-func expect<T: Equatable>(_ actual: T, _ expected: T, file: String = #file, line: Int = #line) throws {
-    if actual != expected {
-        throw TestError("Expected \(expected), got \(actual) at \(file):\(line)")
+    static func it(_ name: String, _ body: () throws -> Void) {
+        totalTests += 1
+        do {
+            try body()
+            passedTests += 1
+        } catch {
+            failedTests += 1
+            print("  ❌ \(currentGroup) > \(name)")
+            print("     \(error)")
+        }
     }
-}
 
-func expectTrue(_ value: Bool, _ message: String = "", file: String = #file, line: Int = #line) throws {
-    if !value {
-        throw TestError("Expected true, got false \(message) at \(file):\(line)")
+    static func expect<T: Equatable>(_ actual: T, _ expected: T, file: String = #file, line: Int = #line) throws {
+        if actual != expected {
+            throw TestError("Expected \(expected), got \(actual) at line \(line)")
+        }
     }
-}
 
-func expectFalse(_ value: Bool, _ message: String = "", file: String = #file, line: Int = #line) throws {
-    if value {
-        throw TestError("Expected false, got true \(message) at \(file):\(line)")
+    static func expectTrue(_ value: Bool, _ message: String = "", line: Int = #line) throws {
+        if !value { throw TestError("Expected true \(message) at line \(line)") }
     }
-}
 
-func expectContains(_ haystack: String, _ needle: String, file: String = #file, line: Int = #line) throws {
-    if !haystack.contains(needle) {
-        throw TestError("Expected \"\(haystack.prefix(50))\" to contain \"\(needle)\" at \(file):\(line)")
+    static func expectFalse(_ value: Bool, _ message: String = "", line: Int = #line) throws {
+        if value { throw TestError("Expected false \(message) at line \(line)") }
     }
-}
 
-struct TestError: Error, CustomStringConvertible {
-    let description: String
-    init(_ msg: String) { description = msg }
-}
+    static func expectContains(_ haystack: String, _ needle: String, line: Int = #line) throws {
+        if !haystack.contains(needle) {
+            throw TestError("\"\(haystack.prefix(50))\" should contain \"\(needle)\" at line \(line)")
+        }
+    }
+
+    struct TestError: Error, CustomStringConvertible {
+        let description: String
+        init(_ msg: String) { description = msg }
+    }
+
+    static func main() {
+        runAllTests()
+
+        print("")
+        print("═══════════════════════════════════════")
+        print(" MacRemoteMCP Swift Tests")
+        print("═══════════════════════════════════════")
+        print(" ✅ Passed: \(passedTests)")
+        if failedTests > 0 { print(" ❌ Failed: \(failedTests)") }
+        print(" Total:   \(totalTests)")
+        print("")
+        if failedTests > 0 { print("FAILED"); exit(1) }
+        else { print("ALL TESTS PASSED"); exit(0) }
+    }
+
+    static func runAllTests() {
 
 // ═══════════════════════════════════════════════════════════════
 // TESTS
@@ -343,31 +357,9 @@ describe("LogPathBuilder") {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Runner
-// ═══════════════════════════════════════════════════════════════
 
-print("")
-print("═══════════════════════════════════════")
-print(" MacRemoteMCP Swift Tests")
-print("═══════════════════════════════════════")
-print("")
-print(" ✅ Passed: \(passedTests)")
-if failedTests > 0 {
-    print(" ❌ Failed: \(failedTests)")
-}
-print(" Total:   \(totalTests)")
-print("")
-
-if failedTests > 0 {
-    print("FAILED")
-    exit(1)
-} else {
-    print("ALL TESTS PASSED")
-    exit(0)
-}
-
-// ── Helper Extensions ────────────────────────────────────────
+    } // end runAllTests()
+} // end TestRunner
 
 extension String {
     func repeating(_ count: Int) -> String {
