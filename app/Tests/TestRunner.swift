@@ -90,12 +90,12 @@ describe("StatusResolver.menuIcon") {
     it("stopped") { try expect(StatusResolver.menuIcon(for: .stopped), "xmark.circle") }
 }
 describe("StatusResolver.toggleTitle") {
-    it("stop running") { try expectContains(StatusResolver.toggleTitle(running: true, service: "MCP"), "Stop") }
-    it("start stopped") { try expectContains(StatusResolver.toggleTitle(running: false, service: "MCP"), "Start") }
+    it("stop running") { try expectContains(StatusResolver.toggleTitle(running: true, service: "MCP"), "停止") }
+    it("start stopped") { try expectContains(StatusResolver.toggleTitle(running: false, service: "MCP"), "起動") }
     it("includes name") { try expectContains(StatusResolver.toggleTitle(running: true, service: "PW"), "PW") }
     for svc in ["MCP Server", "Playwright", "Caffeinate"] {
-        it("\(svc) running") { try expectContains(StatusResolver.toggleTitle(running: true, service: svc), "Stop") }
-        it("\(svc) stopped") { try expectContains(StatusResolver.toggleTitle(running: false, service: svc), "Start") }
+        it("\(svc) running") { try expectContains(StatusResolver.toggleTitle(running: true, service: svc), "停止") }
+        it("\(svc) stopped") { try expectContains(StatusResolver.toggleTitle(running: false, service: svc), "起動") }
     }
 }
 describe("StatusResolver.rawValue") {
