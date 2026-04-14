@@ -57,24 +57,24 @@ func runAllTests() {
 
 // ── EnvParser (15) ───────────────────────────────────────────
 describe("EnvParser") {
-    it("simple key=value") { try expect(EnvParser.parse("K=v")["K"]!, "v") }
+    it("simple key=value") { try expect(EnvParser.parse("K=v")["K"] ?? "NIL", "v") }
     it("multiple lines") { try expect(EnvParser.parse("A=1\nB=2\nC=3").count, 3) }
     it("ignores empty lines") { try expect(EnvParser.parse("A=1\n\nB=2").count, 2) }
     it("ignores comments") { try expect(EnvParser.parse("# c\nK=v").count, 1) }
-    it("value with equals") { try expect(EnvParser.parse("U=http://h?a=b")["U"]!, "http://h?a=b") }
-    it("trims whitespace") { try expect(EnvParser.parse("  K=v  ")["K"]!, "v") }
+    it("value with equals") { try expect(EnvParser.parse("U=http://h?a=b")["U"] ?? "NIL", "http://h?a=b") }
+    it("trims whitespace") { try expect(EnvParser.parse("  K=v  ")["K"] ?? "NIL", "v") }
     it("empty input") { try expect(EnvParser.parse("").count, 0) }
     it("only comments") { try expect(EnvParser.parse("# a\n# b").count, 0) }
-    it("port value") { try expect(EnvParser.parse("PORT=3000")["PORT"]!, "3000") }
-    it("api key") { try expect(EnvParser.parse("MCP_API_KEY=abc")["MCP_API_KEY"]!, "abc") }
-    it("boolean value") { try expect(EnvParser.parse("X=true")["X"]!, "true") }
+    it("port value") { try expect(EnvParser.parse("PORT=3000")["PORT"] ?? "NIL", "3000") }
+    it("api key") { try expect(EnvParser.parse("MCP_API_KEY=abc")["MCP_API_KEY"] ?? "NIL", "abc") }
+    it("boolean value") { try expect(EnvParser.parse("X=true")["X"] ?? "NIL", "true") }
     it("full .env") {
         let e = "MCP_API_KEY=k\nTRANSPORT=http\nPORT=3000\nHOST=127.0.0.1\nPLAYWRIGHT_PORT=3001\nPROXY_PORT=3002"
         try expect(EnvParser.parse(e).count, 6)
     }
     it("no equals skipped") { try expect(EnvParser.parse("BAD\nK=v").count, 1) }
-    it("empty value") { try expect(EnvParser.parse("K=")["K"]!, "") }
-    it("hash in value") { try expect(EnvParser.parse("K=a#b")["K"]!, "a#b") }
+    it("empty value") { try expect(EnvParser.parse("K=")["K"] ?? "NIL", "") }
+    it("hash in value") { try expect(EnvParser.parse("K=a#b")["K"] ?? "NIL", "a#b") }
 }
 
 // ── StatusResolver (20) ──────────────────────────────────────
@@ -199,7 +199,7 @@ describe("LogPathBuilder") {
     it("service stderr") { try expect(LogPathBuilder.serviceLogPath(logDir: "/l", service: "p", stream: "stderr"), "/l/p.stderr.log") }
     it("specific date") {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        try expect(LogPathBuilder.auditLogPath(logDir: "/t", date: f.date(from: "2024-06-15")!), "/t/audit-2024-06-15.log")
+        try expect(LogPathBuilder.auditLogPath(logDir: "/t", date: f.date(from: "2024-06-15") ?? Date()), "/t/audit-2024-06-15.log")
     }
     for svc in ["server", "playwright", "playwright-proxy"] {
         it("path for \(svc)") { try expectContains(LogPathBuilder.serviceLogPath(logDir: "/v", service: svc, stream: "stdout"), svc) }
@@ -207,7 +207,7 @@ describe("LogPathBuilder") {
     it("different logDir") { try expectContains(LogPathBuilder.auditLogPath(logDir: "/custom/dir"), "/custom/dir/") }
     it("another date") {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        try expect(LogPathBuilder.auditLogPath(logDir: "/x", date: f.date(from: "2025-01-01")!), "/x/audit-2025-01-01.log")
+        try expect(LogPathBuilder.auditLogPath(logDir: "/x", date: f.date(from: "2025-01-01") ?? Date()), "/x/audit-2025-01-01.log")
     }
     it("proxy log") { try expect(LogPathBuilder.serviceLogPath(logDir: "/l", service: "proxy", stream: "stderr"), "/l/proxy.stderr.log") }
 }
@@ -224,7 +224,7 @@ describe("TunnelURLParser.extractURL") {
     for (line, expected) in validLines {
         it("extracts from: \(line.prefix(40))") {
             let result = TunnelURLParser.extractURL(from: line)
-            try eq(result ?? "NIL", expected)
+            try expect(result ?? "NIL", expected)
         }
     }
 
@@ -239,41 +239,41 @@ describe("TunnelURLParser.extractURL") {
     for line in invalidLines {
         it("returns nil for: \(line.prefix(30))") {
             let result = TunnelURLParser.extractURL(from: line)
-            try isTrue(result == nil, "should be nil for: \(line)")
+            try expectTrue(result == nil, "should be nil for: \(line)")
         }
     }
 }
 
 describe("TunnelURLParser.mcpEndpoint") {
-    it("appends /mcp") { try eq(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com"), "https://abc.trycloudflare.com/mcp") }
-    it("handles trailing slash") { try eq(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com/"), "https://abc.trycloudflare.com/mcp") }
+    it("appends /mcp") { try expect(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com"), "https://abc.trycloudflare.com/mcp") }
+    it("handles trailing slash") { try expect(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com/"), "https://abc.trycloudflare.com/mcp") }
 }
 
 describe("TunnelURLParser.displayURL") {
-    it("short URL unchanged") { try eq(TunnelURLParser.displayURL("https://abc.trycloudflare.com"), "https://abc.trycloudflare.com") }
+    it("short URL unchanged") { try expect(TunnelURLParser.displayURL("https://abc.trycloudflare.com"), "https://abc.trycloudflare.com") }
     it("long URL truncated") {
         let long = "https://colleagues-ga-eternal-recruitment.trycloudflare.com"
         let display = TunnelURLParser.displayURL(long)
-        try isTrue(display.count < long.count)
-        try has(display, "trycloudflare.com")
+        try expectTrue(display.count < long.count)
+        try expectContains(display, "trycloudflare.com")
     }
 }
 
 describe("CloudflaredChecker") {
     it("returns nil for empty paths") {
-        try isTrue(CloudflaredChecker.findBinary(searchPaths: []) == nil)
+        try expectTrue(CloudflaredChecker.findBinary(searchPaths: []) == nil)
     }
     it("returns nil for nonexistent paths") {
-        try isTrue(CloudflaredChecker.findBinary(searchPaths: ["/nonexistent"]) == nil)
+        try expectTrue(CloudflaredChecker.findBinary(searchPaths: ["/nonexistent"]) == nil)
     }
     it("install command is brew") {
-        try has(CloudflaredChecker.installCommand(), "brew install cloudflared")
+        try expectContains(CloudflaredChecker.installCommand(), "brew install cloudflared")
     }
     it("default paths include homebrew") {
-        try isTrue(CloudflaredChecker.defaultSearchPaths.contains("/opt/homebrew/bin"))
+        try expectTrue(CloudflaredChecker.defaultSearchPaths.contains("/opt/homebrew/bin"))
     }
     it("default paths include usr local") {
-        try isTrue(CloudflaredChecker.defaultSearchPaths.contains("/usr/local/bin"))
+        try expectTrue(CloudflaredChecker.defaultSearchPaths.contains("/usr/local/bin"))
     }
 }
 
