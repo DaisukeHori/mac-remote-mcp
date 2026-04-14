@@ -36,23 +36,23 @@ func runAllTests() {
 
 // ── EnvParser (15) ───────────────────────────────────────────
 describe("EnvParser.parse") {
-    it("simple key=value") { try eq(EnvParser.parse("KEY=val")["KEY"]!, "val") }
+    it("simple key=value") { try eq(EnvParser.parse("KEY=val")["KEY"] ?? "NIL", "val") }
     it("multiple lines") { try eq(EnvParser.parse("A=1\nB=2\nC=3").count, 3) }
     it("ignores empty lines") { try eq(EnvParser.parse("A=1\n\n\nB=2").count, 2) }
     it("ignores comments") { let r = EnvParser.parse("# c\nK=v\n# c2"); try eq(r.count, 1) }
-    it("value with equals") { try eq(EnvParser.parse("U=http://h:3000?a=b")["U"]!, "http://h:3000?a=b") }
-    it("trims whitespace") { try eq(EnvParser.parse("  K=v  ")["K"]!, "v") }
+    it("value with equals") { try eq(EnvParser.parse("U=http://h:3000?a=b")["U"] ?? "NIL", "http://h:3000?a=b") }
+    it("trims whitespace") { try eq(EnvParser.parse("  K=v  ")["K"] ?? "NIL", "v") }
     it("empty input") { try eq(EnvParser.parse("").count, 0) }
     it("only comments") { try eq(EnvParser.parse("# a\n# b").count, 0) }
-    it("port value") { try eq(EnvParser.parse("PORT=3000")["PORT"]!, "3000") }
-    it("api key") { try eq(EnvParser.parse("MCP_API_KEY=abc")["MCP_API_KEY"]!, "abc") }
-    it("boolean value") { try eq(EnvParser.parse("AUTO_START=true")["AUTO_START"]!, "true") }
+    it("port value") { try eq(EnvParser.parse("PORT=3000")["PORT"] ?? "NIL", "3000") }
+    it("api key") { try eq(EnvParser.parse("MCP_API_KEY=abc")["MCP_API_KEY"] ?? "NIL", "abc") }
+    it("boolean value") { try eq(EnvParser.parse("AUTO_START=true")["AUTO_START"] ?? "NIL", "true") }
     it("full env") {
         let e = "MCP_API_KEY=k\nTRANSPORT=http\nPORT=3000\nHOST=127.0.0.1\nPLAYWRIGHT_PORT=3001\nPROXY_PORT=3002"
-        let r = EnvParser.parse(e); try eq(r.count, 6); try eq(r["PORT"]!, "3000")
+        let r = EnvParser.parse(e); try eq(r.count, 6); try eq(r["PORT"] ?? "NIL", "3000")
     }
     it("no equals ignored") { try eq(EnvParser.parse("NOEQUALS\nK=v").count, 1) }
-    it("empty value") { try eq(EnvParser.parse("K=")["K"]!, "") }
+    it("empty value") { try eq(EnvParser.parse("K=")["K"] ?? "NIL", "") }
     it("mixed comments and values") {
         let r = EnvParser.parse("# header\nA=1\n# mid\nB=2\n\nC=3")
         try eq(r.count, 3)
@@ -169,7 +169,7 @@ describe("LogPathBuilder") {
     it("service stderr") { try eq(LogPathBuilder.serviceLogPath(logDir: "/l", service: "pw", stream: "stderr"), "/l/pw.stderr.log") }
     it("audit specific date") {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-        try eq(LogPathBuilder.auditLogPath(logDir: "/t", date: f.date(from: "2024-06-15")!), "/t/audit-2024-06-15.log")
+        try eq(LogPathBuilder.auditLogPath(logDir: "/t", date: f.date(from: "2024-06-15") ?? Date()), "/t/audit-2024-06-15.log")
     }
     for svc in ["server", "playwright", "playwright-proxy"] {
         it("path for \(svc)") { try has(LogPathBuilder.serviceLogPath(logDir: "/v", service: svc, stream: "stdout"), svc) }
