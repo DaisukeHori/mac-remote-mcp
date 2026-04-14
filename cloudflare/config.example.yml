@@ -1,0 +1,25 @@
+# Cloudflare Tunnel config for mac-remote-mcp
+# Copy to ~/.cloudflared/config.yml and update tunnel ID + credentials
+#
+# Create tunnel:
+#   cloudflared tunnel create mac-remote
+#   cloudflared tunnel route dns mac-remote mac-ctrl.yourdomain.com
+#   cloudflared tunnel route dns mac-remote mac-browser.yourdomain.com
+#
+# Run:
+#   cloudflared tunnel run mac-remote
+
+tunnel: <YOUR_TUNNEL_ID>
+credentials-file: /Users/<USERNAME>/.cloudflared/<YOUR_TUNNEL_ID>.json
+
+ingress:
+  # Mac control MCP server (shell, GUI, files, apps)
+  - hostname: mac-ctrl.yourdomain.com
+    service: http://localhost:3000
+
+  # Playwright MCP server (browser automation + devtools)
+  - hostname: mac-browser.yourdomain.com
+    service: http://localhost:3002
+
+  # Catch-all
+  - service: http_status:404

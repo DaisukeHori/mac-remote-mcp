@@ -1,0 +1,35 @@
+{
+  "name": "mac-remote-mcp",
+  "version": "1.0.0",
+  "description": "Unified MCP server for remote macOS control — shell, GUI, files, apps",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "TRANSPORT=http node dist/index.js",
+    "start:playwright-proxy": "node dist/playwright-proxy/index.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "express": "^4.21.2",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.3",
+    "@types/supertest": "^7.2.0",
+    "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "supertest": "^7.2.2",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.4"
+  }
+}

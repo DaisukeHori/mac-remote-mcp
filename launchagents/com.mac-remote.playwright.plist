@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mac-remote.playwright</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__NPX_PATH__</string>
+        <string>@playwright/mcp@latest</string>
+        <string>--port</string>
+        <string>3001</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--caps</string>
+        <string>core,vision,devtools</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PLAYWRIGHT_MCP_CONSOLE_LEVEL</key>
+        <string>info</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__HOME__/.mac-remote-mcp/logs/playwright.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/.mac-remote-mcp/logs/playwright.stderr.log</string>
+</dict>
+</plist>
