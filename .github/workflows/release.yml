@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install & Test
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+  build-macos-app:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Swift compiler
+        run: |
+          swiftc --version
+          xcode-select -p
+
+      - name: Build macOS app
+        run: |
+          chmod +x app/build.sh
+          cd app && ./build.sh
+
+      - name: Verify build artifacts
+        run: |
+          ls -la app/build/
+          ls -la app/build/MacRemoteMCP.app/Contents/MacOS/
+          file app/build/MacRemoteMCP.app/Contents/MacOS/MacRemoteMCP
+          test -f app/build/MacRemoteMCP-macOS.zip
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "MacRemoteMCP ${{ steps.version.outputs.version }}"
+          body: |
+            ## MacRemoteMCP ${{ steps.version.outputs.version }}
+
+            macOSメニューバーアプリ + MCPサーバー（34ツール）
+
+            ### インストール方法
+            1. `MacRemoteMCP-macOS.zip` をダウンロード
+            2. 解凍して `MacRemoteMCP.app` を `/Applications` に移動
+            3. `mac-remote-mcp/` を `~/mac-remote-mcp` に移動
+            4. ターミナルで `cd ~/mac-remote-mcp && ./scripts/setup.sh` を実行
+            5. `MacRemoteMCP.app` を起動
+
+            ### 必要なもの
+            - macOS 13.0+
+            - Node.js 20+
+            - tmux (`brew install tmux`)
+            - Cloudflare Tunnel（リモートアクセス用）
+
+            ### 変更内容
+            [CHANGELOG参照]
+          files: |
+            app/build/MacRemoteMCP-macOS.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
