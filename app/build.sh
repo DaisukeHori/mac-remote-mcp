@@ -78,8 +78,14 @@ codesign --force --sign - "$APP_BUNDLE"
 # Build Node.js dist and bundle it alongside
 echo "  Building Node.js MCP server..."
 cd "$PROJECT_ROOT"
-npm install --production
+if [ ! -d "node_modules" ]; then
+  npm install
+fi
 npm run build
+
+# Reinstall production-only for smaller bundle
+rm -rf node_modules
+npm install --omit=dev
 
 # Create dist archive to ship alongside the app
 echo "  Packaging MCP server..."
