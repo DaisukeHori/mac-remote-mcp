@@ -1,121 +1,96 @@
 #!/bin/bash
 set -e
 
-# Build MacRemoteMCP.app from Swift sources
-# Must be run on macOS with Xcode Command Line Tools installed
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_DIR="$SCRIPT_DIR/MacRemoteMCP"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$SCRIPT_DIR/build"
 APP_BUNDLE="$BUILD_DIR/MacRemoteMCP.app"
+DMG_DIR="$BUILD_DIR/dmg-contents"
 
 echo "▶ Building MacRemoteMCP.app..."
-
-# Clean
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Compile Swift sources
-echo "  Compiling Swift..."
+# ── 1. Compile Swift ──────────────────────────────────────────
+echo "  Compiling Swift (arm64)..."
 swiftc \
   -o "$BUILD_DIR/MacRemoteMCP" \
-  -framework Cocoa \
-  -framework Security \
-  -target arm64-apple-macos13 \
-  -O \
+  -framework Cocoa -framework Security \
+  -target arm64-apple-macos13 -O \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
-  "$APP_DIR/Config.swift"
+  "$APP_DIR/Config.swift" \
+  "$APP_DIR/Logic.swift"
 
-# Also compile for x86_64 if possible
 if swiftc \
   -o "$BUILD_DIR/MacRemoteMCP_x86" \
-  -framework Cocoa \
-  -framework Security \
-  -target x86_64-apple-macos13 \
-  -O \
+  -framework Cocoa -framework Security \
+  -target x86_64-apple-macos13 -O \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
-  "$APP_DIR/Config.swift" 2>/dev/null; then
+  "$APP_DIR/Config.swift" \
+  "$APP_DIR/Logic.swift" 2>/dev/null; then
   echo "  Creating universal binary..."
-  lipo -create \
-    "$BUILD_DIR/MacRemoteMCP" \
-    "$BUILD_DIR/MacRemoteMCP_x86" \
+  lipo -create "$BUILD_DIR/MacRemoteMCP" "$BUILD_DIR/MacRemoteMCP_x86" \
     -output "$BUILD_DIR/MacRemoteMCP_universal"
   mv "$BUILD_DIR/MacRemoteMCP_universal" "$BUILD_DIR/MacRemoteMCP"
   rm -f "$BUILD_DIR/MacRemoteMCP_x86"
-else
-  echo "  (arm64 only — x86_64 cross-compile not available)"
 fi
 
-# Create .app bundle structure
+# ── 2. Build Node.js MCP server ──────────────────────────────
+echo "  Building Node.js MCP server..."
+cd "$PROJECT_ROOT"
+[ -d "node_modules" ] || npm install
+npm run build
+
+# ── 3. Create .app bundle ────────────────────────────────────
 echo "  Creating .app bundle..."
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
-mkdir -p "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/Resources/mcp-server"
 
-# Copy binary
 mv "$BUILD_DIR/MacRemoteMCP" "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
 chmod +x "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
-
-# Copy Info.plist
 cp "$APP_DIR/Info.plist" "$APP_BUNDLE/Contents/"
+echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 
-# Update version from git tag if available
 if VERSION=$(git describe --tags --exact-match 2>/dev/null); then
-  VERSION="${VERSION#v}"  # Strip leading 'v'
-  /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+  VERSION="${VERSION#v}"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
+    "$APP_BUNDLE/Contents/Info.plist"
   echo "  Version: $VERSION"
 fi
 
-# Create PkgInfo
-echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
+# ── 4. Embed MCP server inside .app ──────────────────────────
+echo "  Embedding MCP server..."
+RES="$APP_BUNDLE/Contents/Resources/mcp-server"
+cp -r dist/ "$RES/dist/"
+cp package.json package-lock.json .env.example README.md "$RES/"
+cp -r scripts/ "$RES/scripts/"
+cp -r cloudflare/ "$RES/cloudflare/"
+cp -r launchagents/ "$RES/launchagents/"
 
-# Ad-hoc code sign
+cd "$RES" && npm install --omit=dev 2>/dev/null && cd "$PROJECT_ROOT"
+echo "  App size: $(du -sh "$APP_BUNDLE" | cut -f1)"
+
+# ── 5. Code sign ─────────────────────────────────────────────
 echo "  Code signing..."
-codesign --force --sign - "$APP_BUNDLE"
+codesign --force --deep --sign - "$APP_BUNDLE"
 
-# Build Node.js dist and bundle it alongside
-echo "  Building Node.js MCP server..."
-cd "$PROJECT_ROOT"
-if [ ! -d "node_modules" ]; then
-  npm install
-fi
-npm run build
+# ── 6. Create DMG ────────────────────────────────────────────
+echo "  Creating DMG installer..."
+mkdir -p "$DMG_DIR"
+cp -r "$APP_BUNDLE" "$DMG_DIR/"
+ln -s /Applications "$DMG_DIR/Applications"
 
-# Reinstall production-only for smaller bundle
-rm -rf node_modules
-npm install --omit=dev
+hdiutil create -volname "MacRemoteMCP" -srcfolder "$DMG_DIR" \
+  -ov -format UDZO "$BUILD_DIR/MacRemoteMCP.dmg"
+rm -rf "$DMG_DIR"
 
-# Create dist archive to ship alongside the app
-echo "  Packaging MCP server..."
-DIST_DIR="$BUILD_DIR/mac-remote-mcp"
-mkdir -p "$DIST_DIR"
-cp -r dist/ "$DIST_DIR/dist/"
-cp -r node_modules/ "$DIST_DIR/node_modules/"
-cp package.json "$DIST_DIR/"
-cp .env.example "$DIST_DIR/"
-cp -r scripts/ "$DIST_DIR/scripts/"
-cp -r cloudflare/ "$DIST_DIR/cloudflare/"
-cp -r launchagents/ "$DIST_DIR/launchagents/"
-cp README.md "$DIST_DIR/"
-
-# Create final zip
-echo "  Creating release archive..."
-cd "$BUILD_DIR"
-zip -r "MacRemoteMCP-macOS.zip" \
-  MacRemoteMCP.app \
-  mac-remote-mcp/ \
-  -x "*/node_modules/.cache/*"
+# Also zip for GitHub
+cd "$BUILD_DIR" && zip -qr "MacRemoteMCP-macOS.zip" MacRemoteMCP.app
 
 echo ""
 echo "✅ Build complete!"
-echo "   App:     $APP_BUNDLE"
-echo "   Archive: $BUILD_DIR/MacRemoteMCP-macOS.zip"
-echo ""
-echo "   To install:"
-echo "   1. Unzip MacRemoteMCP-macOS.zip"
-echo "   2. Move MacRemoteMCP.app to /Applications"
-echo "   3. Move mac-remote-mcp/ to ~/mac-remote-mcp"
-echo "   4. cd ~/mac-remote-mcp && ./scripts/setup.sh"
-echo "   5. Launch MacRemoteMCP from /Applications"
+echo "   DMG: $BUILD_DIR/MacRemoteMCP.dmg ($(du -sh "$BUILD_DIR/MacRemoteMCP.dmg" | cut -f1))"
+echo "   Install: Mount DMG → Drag MacRemoteMCP to Applications → Launch"

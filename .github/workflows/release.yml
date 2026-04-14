@@ -60,7 +60,9 @@ jobs:
         run: |
           ls -la app/build/
           ls -la app/build/MacRemoteMCP.app/Contents/MacOS/
+          ls -la app/build/MacRemoteMCP.app/Contents/Resources/mcp-server/dist/
           file app/build/MacRemoteMCP.app/Contents/MacOS/MacRemoteMCP
+          test -f app/build/MacRemoteMCP.dmg
           test -f app/build/MacRemoteMCP-macOS.zip
 
       - name: Get version from tag
@@ -74,21 +76,27 @@ jobs:
           body: |
             ## MacRemoteMCP ${{ steps.version.outputs.version }}
 
-            macOSメニューバーアプリ + MCPサーバー（34ツール, 673+ テスト）
+            macOSメニューバーアプリ + MCPサーバー（34ツール, 775テスト）
 
             ### インストール方法
-            1. `MacRemoteMCP-macOS.zip` をダウンロード
-            2. 解凍して `MacRemoteMCP.app` を `/Applications` に移動
-            3. `mac-remote-mcp/` を `~/mac-remote-mcp` に移動
-            4. ターミナルで `cd ~/mac-remote-mcp && ./scripts/setup.sh` を実行
-            5. `MacRemoteMCP.app` を起動
+            1. `MacRemoteMCP.dmg` をダウンロード
+            2. DMGをマウント（ダブルクリック）
+            3. `MacRemoteMCP.app` を `Applications` にドラッグ&ドロップ
+            4. `MacRemoteMCP.app` を起動
+            5. メニューバーのアイコンから "Start All" をクリック
+
+            ### 初回セットアップ
+            macOS が以下の権限を要求します（System Settings → Privacy & Security）:
+            - **Accessibility** — マウス/キーボード操作
+            - **Screen Recording** — スクリーンショット
+            - **Automation** — アプリ制御
 
             ### 必要なもの
             - macOS 13.0+
-            - Node.js 20+
+            - Node.js 20+ (`brew install node`)
             - tmux (`brew install tmux`)
-            - Cloudflare Tunnel（リモートアクセス用）
           files: |
+            app/build/MacRemoteMCP.dmg
             app/build/MacRemoteMCP-macOS.zip
           draft: false
           prerelease: false

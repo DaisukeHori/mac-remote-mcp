@@ -15,22 +15,24 @@ class Config {
     let pathEnv: String
 
     private init() {
-        // Determine install directory (adjacent to .app or from env)
+        // Determine install directory
+        // Priority: 1) Inside .app bundle  2) Adjacent to .app  3) ~/mac-remote-mcp
         let bundlePath = Bundle.main.bundlePath
+        let bundleResources = bundlePath + "/Contents/Resources/mcp-server"
         let appParent = (bundlePath as NSString).deletingLastPathComponent
 
-        // Check if mac-remote-mcp project is in the same directory as the .app
-        if FileManager.default.fileExists(atPath: appParent + "/dist/index.js") {
+        if FileManager.default.fileExists(atPath: bundleResources + "/dist/index.js") {
+            installDir = bundleResources
+        } else if FileManager.default.fileExists(atPath: appParent + "/dist/index.js") {
             installDir = appParent
         } else if FileManager.default.fileExists(atPath: appParent + "/mac-remote-mcp/dist/index.js") {
             installDir = appParent + "/mac-remote-mcp"
         } else {
-            // Fall back to well-known location
             let home = NSHomeDirectory()
             if FileManager.default.fileExists(atPath: home + "/mac-remote-mcp/dist/index.js") {
                 installDir = home + "/mac-remote-mcp"
             } else {
-                installDir = appParent
+                installDir = bundleResources
             }
         }
 
