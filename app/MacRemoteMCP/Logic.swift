@@ -127,6 +127,64 @@ struct ApiKeyValidator {
     }
 }
 
+// MARK: - Tunnel URL Parser
+
+struct TunnelURLParser {
+    /// Extract trycloudflare.com URL from cloudflared output line
+    static func extractURL(from line: String) -> String? {
+        // cloudflared outputs: INF | https://xxx.trycloudflare.com |
+        // or: INF https://xxx.trycloudflare.com
+        guard let range = line.range(of: "https://[a-zA-Z0-9-]+\\.trycloudflare\\.com",
+                                      options: .regularExpression) else {
+            return nil
+        }
+        return String(line[range])
+    }
+
+    /// Build the MCP endpoint URL from a tunnel base URL
+    static func mcpEndpoint(tunnelURL: String) -> String {
+        let base = tunnelURL.hasSuffix("/") ? String(tunnelURL.dropLast()) : tunnelURL
+        return base + "/mcp"
+    }
+
+    /// Format display URL (truncate long random names)
+    static func displayURL(_ url: String) -> String {
+        if url.count <= 45 { return url }
+        // https://abcdef-ghijk-lmnop-qrst.trycloudflare.com
+        // → https://abcdef-ghij...cloudflare.com
+        guard let schemeEnd = url.range(of: "://") else { return url }
+        let afterScheme = url[schemeEnd.upperBound...]
+        if afterScheme.count <= 35 { return url }
+        let prefix = String(afterScheme.prefix(15))
+        let suffix = "trycloudflare.com"
+        return "https://\(prefix)...\(suffix)"
+    }
+}
+
+// MARK: - Cloudflared Availability
+
+struct CloudflaredChecker {
+    static func findBinary(searchPaths: [String]) -> String? {
+        for dir in searchPaths {
+            let path = dir + "/cloudflared"
+            if FileManager.default.isExecutableFile(atPath: path) {
+                return path
+            }
+        }
+        return nil
+    }
+
+    static let defaultSearchPaths = [
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+        "/usr/bin",
+    ]
+
+    static func installCommand() -> String {
+        return "brew install cloudflared"
+    }
+}
+
 // MARK: - Log Path Builder
 
 struct LogPathBuilder {

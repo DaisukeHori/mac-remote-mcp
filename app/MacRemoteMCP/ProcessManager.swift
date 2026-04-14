@@ -5,10 +5,13 @@ class ProcessManager {
     private var playwrightProcess: Process?
     private var playwrightProxyProcess: Process?
     private var caffeinateProcess: Process?
+    private var tunnelProcess: Process?
+    private(set) var tunnelURL: String?
 
     var isServerRunning: Bool { serverProcess?.isRunning ?? false }
     var isPlaywrightRunning: Bool { playwrightProcess?.isRunning ?? false }
     var isCaffeinateRunning: Bool { caffeinateProcess?.isRunning ?? false }
+    var isTunnelRunning: Bool { tunnelProcess?.isRunning ?? false }
 
     // MARK: - MCP Server
 
@@ -158,15 +161,87 @@ class ProcessManager {
         log("Caffeinate stopped")
     }
 
+    // MARK: - Cloudflare Quick Tunnel
+
+    func startQuickTunnel() {
+        guard !isTunnelRunning else { return }
+
+        let config = Config.shared
+        let cloudflaredPath = CloudflaredChecker.findBinary(searchPaths: CloudflaredChecker.defaultSearchPaths)
+        guard let cfPath = cloudflaredPath else {
+            log("cloudflared not found. Install: brew install cloudflared")
+            return
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: cfPath)
+        process.arguments = ["tunnel", "--url", "http://127.0.0.1:\(config.serverPort)"]
+        process.environment = ["PATH": config.pathEnv]
+
+        // cloudflared outputs the URL to stderr
+        let errPipe = Pipe()
+        let outPipe = logPipe(name: "tunnel.stdout")
+        process.standardOutput = outPipe
+        process.standardError = errPipe
+
+        // Parse stderr for tunnel URL
+        errPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            guard !data.isEmpty, let line = String(data: data, encoding: .utf8) else { return }
+
+            // Log to file
+            let logPath = Config.shared.logDir + "/tunnel.stderr.log"
+            if let fh = FileHandle(forWritingAtPath: logPath) {
+                fh.seekToEndOfFile(); fh.write(data); fh.closeFile()
+            } else {
+                FileManager.default.createFile(atPath: logPath, contents: data)
+            }
+
+            // Extract URL
+            if self?.tunnelURL == nil, let url = TunnelURLParser.extractURL(from: line) {
+                DispatchQueue.main.async {
+                    self?.tunnelURL = url
+                    self?.log("Quick Tunnel URL: \(url)")
+                    // Post notification for AppDelegate to update menu
+                    NotificationCenter.default.post(name: .tunnelURLChanged, object: url)
+                }
+            }
+        }
+
+        do {
+            try process.run()
+            tunnelProcess = process
+            log("Quick Tunnel starting (PID: \(process.processIdentifier))...")
+        } catch {
+            log("Failed to start Quick Tunnel: \(error)")
+        }
+    }
+
+    func stopTunnel() {
+        if let process = tunnelProcess, process.isRunning {
+            process.terminate()
+            process.waitUntilExit()
+        }
+        tunnelProcess = nil
+        tunnelURL = nil
+        log("Tunnel stopped")
+        NotificationCenter.default.post(name: .tunnelURLChanged, object: nil)
+    }
+
     // MARK: - All
 
     func startAll() {
         startCaffeinate()
         startServer()
         startPlaywright()
+        // Tunnel starts after server is up
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.startQuickTunnel()
+        }
     }
 
     func stopAll() {
+        stopTunnel()
         stopPlaywright()
         stopServer()
         stopCaffeinate()
@@ -205,4 +280,9 @@ class ProcessManager {
         }
         NSLog("MacRemoteMCP: %@", message)
     }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let tunnelURLChanged = Notification.Name("tunnelURLChanged")
 }

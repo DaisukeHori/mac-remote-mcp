@@ -212,4 +212,69 @@ describe("LogPathBuilder") {
     it("proxy log") { try expect(LogPathBuilder.serviceLogPath(logDir: "/l", service: "proxy", stream: "stderr"), "/l/proxy.stderr.log") }
 }
 
+// ── TunnelURLParser (20) ─────────────────────────────────────
+describe("TunnelURLParser.extractURL") {
+    let validLines = [
+        ("INF | https://random-words-here.trycloudflare.com |", "https://random-words-here.trycloudflare.com"),
+        ("INF https://abc-def-ghi.trycloudflare.com", "https://abc-def-ghi.trycloudflare.com"),
+        ("2024-01-01T00:00:00Z INF | https://test-123.trycloudflare.com |", "https://test-123.trycloudflare.com"),
+        ("  https://my-tunnel.trycloudflare.com  ", "https://my-tunnel.trycloudflare.com"),
+        ("some text https://colleagues-ga-eternal-recruitment.trycloudflare.com more text", "https://colleagues-ga-eternal-recruitment.trycloudflare.com"),
+    ]
+    for (line, expected) in validLines {
+        it("extracts from: \(line.prefix(40))") {
+            let result = TunnelURLParser.extractURL(from: line)
+            try eq(result ?? "NIL", expected)
+        }
+    }
+
+    let invalidLines = [
+        "INF Starting tunnel...",
+        "INF Connecting to Cloudflare network",
+        "https://example.com",
+        "trycloudflare.com",
+        "",
+        "random text no url here",
+    ]
+    for line in invalidLines {
+        it("returns nil for: \(line.prefix(30))") {
+            let result = TunnelURLParser.extractURL(from: line)
+            try isTrue(result == nil, "should be nil for: \(line)")
+        }
+    }
+}
+
+describe("TunnelURLParser.mcpEndpoint") {
+    it("appends /mcp") { try eq(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com"), "https://abc.trycloudflare.com/mcp") }
+    it("handles trailing slash") { try eq(TunnelURLParser.mcpEndpoint(tunnelURL: "https://abc.trycloudflare.com/"), "https://abc.trycloudflare.com/mcp") }
+}
+
+describe("TunnelURLParser.displayURL") {
+    it("short URL unchanged") { try eq(TunnelURLParser.displayURL("https://abc.trycloudflare.com"), "https://abc.trycloudflare.com") }
+    it("long URL truncated") {
+        let long = "https://colleagues-ga-eternal-recruitment.trycloudflare.com"
+        let display = TunnelURLParser.displayURL(long)
+        try isTrue(display.count < long.count)
+        try has(display, "trycloudflare.com")
+    }
+}
+
+describe("CloudflaredChecker") {
+    it("returns nil for empty paths") {
+        try isTrue(CloudflaredChecker.findBinary(searchPaths: []) == nil)
+    }
+    it("returns nil for nonexistent paths") {
+        try isTrue(CloudflaredChecker.findBinary(searchPaths: ["/nonexistent"]) == nil)
+    }
+    it("install command is brew") {
+        try has(CloudflaredChecker.installCommand(), "brew install cloudflared")
+    }
+    it("default paths include homebrew") {
+        try isTrue(CloudflaredChecker.defaultSearchPaths.contains("/opt/homebrew/bin"))
+    }
+    it("default paths include usr local") {
+        try isTrue(CloudflaredChecker.defaultSearchPaths.contains("/usr/local/bin"))
+    }
+}
+
 } // end runAllTests

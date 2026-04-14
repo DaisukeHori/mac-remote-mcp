@@ -9,6 +9,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var toggleServerMenuItem: NSMenuItem!
     private var togglePlaywrightMenuItem: NSMenuItem!
     private var toggleCaffeinateMenuItem: NSMenuItem!
+    private var tunnelMenuItem: NSMenuItem!
+    private var toggleTunnelMenuItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         processManager = ProcessManager()
@@ -19,6 +21,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "MCP")
             button.image?.isTemplate = true
         }
+
+        // Watch for tunnel URL updates
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(tunnelURLDidChange(_:)),
+            name: .tunnelURLChanged, object: nil
+        )
 
         buildMenu()
 
@@ -63,6 +71,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Tunnel section
+        tunnelMenuItem = NSMenuItem(title: "🌐 Tunnel: Not running", action: nil, keyEquivalent: "")
+        tunnelMenuItem.isEnabled = false
+        menu.addItem(tunnelMenuItem)
+
+        toggleTunnelMenuItem = NSMenuItem(title: "▶ Start Quick Tunnel (free)", action: #selector(toggleTunnel), keyEquivalent: "t")
+        menu.addItem(toggleTunnelMenuItem)
+
+        let copyURLItem = NSMenuItem(title: "Copy MCP URL", action: #selector(copyTunnelURL), keyEquivalent: "u")
+        menu.addItem(copyURLItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         // Start/Stop All
         let startAllItem = NSMenuItem(title: "Start All", action: #selector(startAll), keyEquivalent: "r")
         menu.addItem(startAllItem)
@@ -98,14 +119,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let serverRunning = processManager.isServerRunning
         let playwrightRunning = processManager.isPlaywrightRunning
         let caffeinateRunning = processManager.isCaffeinateRunning
+        let tunnelRunning = processManager.isTunnelRunning
+        let tunnelURL = processManager.tunnelURL
 
         toggleServerMenuItem.title = serverRunning ? "⏹ Stop MCP Server" : "▶ Start MCP Server"
         togglePlaywrightMenuItem.title = playwrightRunning ? "⏹ Stop Playwright" : "▶ Start Playwright"
         toggleCaffeinateMenuItem.title = caffeinateRunning ? "⏹ Stop Caffeinate" : "▶ Start Caffeinate"
+        toggleTunnelMenuItem.title = tunnelRunning ? "⏹ Stop Tunnel" : "▶ Start Quick Tunnel (free)"
+
+        // Tunnel URL display
+        if let url = tunnelURL {
+            tunnelMenuItem.title = "🌐 \(TunnelURLParser.displayURL(url))"
+        } else if tunnelRunning {
+            tunnelMenuItem.title = "🌐 Tunnel: Connecting..."
+        } else {
+            tunnelMenuItem.title = "🌐 Tunnel: Not running"
+        }
 
         let allRunning = serverRunning && playwrightRunning
         if allRunning {
-            statusMenuItem.title = "● All Running"
+            statusMenuItem.title = tunnelURL != nil ? "● Running — Online" : "● All Running (local only)"
             statusItem.button?.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "Running")
         } else if serverRunning || playwrightRunning {
             statusMenuItem.title = "◐ Partially Running"
@@ -166,6 +199,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             self?.apiKeyMenuItem.title = original
         }
+    }
+
+    @objc private func toggleTunnel() {
+        if processManager.isTunnelRunning {
+            processManager.stopTunnel()
+        } else {
+            processManager.startQuickTunnel()
+        }
+        updateMenuState()
+    }
+
+    @objc private func copyTunnelURL() {
+        guard let url = processManager.tunnelURL else {
+            tunnelMenuItem.title = "🌐 Tunnel not running"
+            return
+        }
+        let mcpURL = TunnelURLParser.mcpEndpoint(tunnelURL: url)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(mcpURL, forType: .string)
+
+        let original = tunnelMenuItem.title
+        tunnelMenuItem.title = "✓ Copied: \(TunnelURLParser.displayURL(mcpURL))"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.tunnelMenuItem.title = original
+        }
+    }
+
+    @objc private func tunnelURLDidChange(_ notification: Notification) {
+        updateMenuState()
     }
 
     @objc private func openLogs() {
