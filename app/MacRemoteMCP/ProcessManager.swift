@@ -39,9 +39,9 @@ class ProcessManager {
         do {
             try process.run()
             serverProcess = process
-            log("MCP Server started (PID: \(process.processIdentifier))")
+            log("MCPサーバー起動 (PID: \(process.processIdentifier))")
         } catch {
-            log("Failed to start MCP Server: \(error)")
+            log("MCPサーバー起動失敗: \(error)")
         }
     }
 
@@ -50,7 +50,7 @@ class ProcessManager {
         process.terminate()
         process.waitUntilExit()
         serverProcess = nil
-        log("MCP Server stopped")
+        log("MCPサーバー停止")
     }
 
     // MARK: - Playwright MCP + Proxy
@@ -82,9 +82,9 @@ class ProcessManager {
         do {
             try pw.run()
             playwrightProcess = pw
-            log("Playwright MCP started (PID: \(pw.processIdentifier))")
+            log("Playwright起動 (PID: \(pw.processIdentifier))")
         } catch {
-            log("Failed to start Playwright: \(error)")
+            log("Playwright起動失敗: \(error)")
         }
 
         // Start auth proxy (after a short delay for Playwright to bind)
@@ -115,9 +115,9 @@ class ProcessManager {
         do {
             try proxy.run()
             playwrightProxyProcess = proxy
-            log("Playwright Proxy started (PID: \(proxy.processIdentifier))")
+            log("Playwrightプロキシ起動 (PID: \(proxy.processIdentifier))")
         } catch {
-            log("Failed to start Playwright Proxy: \(error)")
+            log("Playwright起動失敗 Proxy: \(error)")
         }
     }
 
@@ -132,7 +132,7 @@ class ProcessManager {
             pw.waitUntilExit()
             playwrightProcess = nil
         }
-        log("Playwright stopped")
+        log("Playwright停止")
     }
 
     // MARK: - Caffeinate
@@ -147,9 +147,9 @@ class ProcessManager {
         do {
             try process.run()
             caffeinateProcess = process
-            log("Caffeinate started (PID: \(process.processIdentifier))")
+            log("スリープ防止開始 (PID: \(process.processIdentifier))")
         } catch {
-            log("Failed to start caffeinate: \(error)")
+            log("スリープ防止開始失敗: \(error)")
         }
     }
 
@@ -158,7 +158,7 @@ class ProcessManager {
         process.terminate()
         process.waitUntilExit()
         caffeinateProcess = nil
-        log("Caffeinate stopped")
+        log("スリープ防止解除")
     }
 
     // MARK: - Cloudflare Quick Tunnel
@@ -169,7 +169,7 @@ class ProcessManager {
         let config = Config.shared
         let cloudflaredPath = CloudflaredChecker.findBinary(searchPaths: CloudflaredChecker.defaultSearchPaths)
         guard let cfPath = cloudflaredPath else {
-            log("cloudflared not found. Install: brew install cloudflared")
+            log("cloudflaredが見つかりません。インストール: brew install cloudflared")
             return
         }
 
@@ -201,7 +201,7 @@ class ProcessManager {
             if self?.tunnelURL == nil, let url = TunnelURLParser.extractURL(from: line) {
                 DispatchQueue.main.async {
                     self?.tunnelURL = url
-                    self?.log("Quick Tunnel URL: \(url)")
+                    self?.log("トンネルURL: \(url)")
                     // Post notification for AppDelegate to update menu
                     NotificationCenter.default.post(name: .tunnelURLChanged, object: url)
                 }
@@ -211,9 +211,9 @@ class ProcessManager {
         do {
             try process.run()
             tunnelProcess = process
-            log("Quick Tunnel starting (PID: \(process.processIdentifier))...")
+            log("クイックトンネル起動中 (PID: \(process.processIdentifier))...")
         } catch {
-            log("Failed to start Quick Tunnel: \(error)")
+            log("クイックトンネル起動失敗: \(error)")
         }
     }
 
@@ -224,7 +224,7 @@ class ProcessManager {
         }
         tunnelProcess = nil
         tunnelURL = nil
-        log("Tunnel stopped")
+        log("トンネル停止")
         NotificationCenter.default.post(name: .tunnelURLChanged, object: nil)
     }
 

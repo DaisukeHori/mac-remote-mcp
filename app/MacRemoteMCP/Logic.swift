@@ -23,9 +23,9 @@ struct EnvParser {
 // MARK: - Status Determination
 
 enum ServiceStatus: String {
-    case allRunning = "● All Running"
-    case partiallyRunning = "◐ Partially Running"
-    case stopped = "○ Stopped"
+    case allRunning = "● 全サービス稼働中"
+    case partiallyRunning = "◐ 一部稼働中"
+    case stopped = "○ 停止中"
 }
 
 struct StatusResolver {
@@ -44,7 +44,7 @@ struct StatusResolver {
     }
 
     static func toggleTitle(running: Bool, service: String) -> String {
-        return running ? "⏹ Stop \(service)" : "▶ Start \(service)"
+        return running ? "⏹ \(service)を停止" : "▶ \(service)を起動"
     }
 }
 

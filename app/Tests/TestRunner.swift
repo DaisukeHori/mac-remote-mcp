@@ -99,9 +99,9 @@ describe("StatusResolver.toggleTitle") {
     }
 }
 describe("StatusResolver.rawValue") {
-    it("allRunning") { try expect(ServiceStatus.allRunning.rawValue, "● All Running") }
-    it("partial") { try expect(ServiceStatus.partiallyRunning.rawValue, "◐ Partially Running") }
-    it("stopped") { try expect(ServiceStatus.stopped.rawValue, "○ Stopped") }
+    it("allRunning") { try expect(ServiceStatus.allRunning.rawValue, "● 全サービス稼働中") }
+    it("partial") { try expect(ServiceStatus.partiallyRunning.rawValue, "◐ 一部稼働中") }
+    it("stopped") { try expect(ServiceStatus.stopped.rawValue, "○ 停止中") }
 }
 
 // ── InstallDirResolver (5) ───────────────────────────────────
