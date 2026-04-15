@@ -122,11 +122,19 @@ class PermissionChecker {
         let bundleProfilePath = bundlePath + "/Contents/Resources/MacRemoteMCP-Permissions.mobileconfig"
 
         if FileManager.default.fileExists(atPath: bundleProfilePath) {
+            // Open the profile (triggers macOS "Profile Downloaded" dialog)
             NSWorkspace.shared.open(URL(fileURLWithPath: bundleProfilePath))
+
+            // After a short delay, open System Settings > Profiles
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preferences.configurationprofiles") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
             return
         }
 
-        // Show Finder file picker
+        // Show Finder file picker if not in bundle
         let panel = NSOpenPanel()
         panel.title = "構成プロファイルを選択"
         panel.message = "MacRemoteMCP-Permissions.mobileconfig を選択してください"
@@ -136,6 +144,11 @@ class PermissionChecker {
 
         if panel.runModal() == .OK, let url = panel.url {
             NSWorkspace.shared.open(url)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if let settingsURL = URL(string: "x-apple.systempreferences:com.apple.preferences.configurationprofiles") {
+                    NSWorkspace.shared.open(settingsURL)
+                }
+            }
         }
     }
 }

@@ -88,7 +88,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
             container.addSubview(label)
 
             let field = NSTextField(frame: NSRect(x: 170, y: y, width: 80, height: 22))
-            field.integerValue = portValues[i]
+            field.stringValue = String(portValues[i])
             field.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
             field.tag = 201 + i
             container.addSubview(field)
@@ -300,7 +300,8 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         let portKeys = ["PORT", "PLAYWRIGHT_PORT", "PROXY_PORT"]
         for i in 0..<3 {
             if let field = contentView.viewWithTag(201 + i) as? NSTextField {
-                envVars[portKeys[i]] = String(field.integerValue)
+                let val = field.stringValue.replacingOccurrences(of: ",", with: "")
+                envVars[portKeys[i]] = val
             }
         }
 
