@@ -94,30 +94,40 @@ echo "  App size: $(du -sh "$APP_BUNDLE" | cut -f1)"
 # ── 5. Code sign ─────────────────────────────────────────────
 echo "  Code signing..."
 if [ -n "$APPLE_SIGNING_IDENTITY" ]; then
-  # Sign all native binaries inside node_modules first (required for notarization)
-  echo "  Signing native binaries in node_modules..."
+  # For notarization: sign bottom-up, no --deep at the end
+  # 1. Sign all native binaries in node_modules
+  echo "  Signing native binaries..."
   find "$APP_BUNDLE/Contents/Resources/mcp-server/node_modules" \
-    -type f \( -name "*.node" -o -name "*.dylib" -o -name "*.so" \) \
-    2>/dev/null | while read f; do
-    codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
+    -type f \( -name "*.node" -o -name "*.dylib" -o -name "*.so" \) 2>/dev/null | while read f; do
+    codesign --force --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
       echo "    Signed: $(basename "$f")" || true
   done
 
-  # Sign any Mach-O binaries in node_modules
+  # 2. Sign any Mach-O executables in node_modules
   find "$APP_BUNDLE/Contents/Resources/mcp-server/node_modules" \
     -type f -perm +111 2>/dev/null | while read f; do
-    file "$f" | grep -q "Mach-O" && \
-      codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
-      echo "    Signed: $(basename "$f")" || true
+    if file "$f" | grep -q "Mach-O"; then
+      codesign --force --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
+        echo "    Signed: $(basename "$f")" || true
+    fi
   done
 
-  # Sign the main binary
-  codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" \
+  # 3. Sign the main executable
+  echo "  Signing main binary..."
+  codesign --force --options runtime --timestamp \
+    --sign "$APPLE_SIGNING_IDENTITY" \
     "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
 
-  # Sign the entire bundle
-  codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$APP_BUNDLE"
+  # 4. Sign the .app bundle (top-level, no --deep)
+  echo "  Signing app bundle..."
+  codesign --force --options runtime --timestamp \
+    --sign "$APPLE_SIGNING_IDENTITY" \
+    "$APP_BUNDLE"
+
   echo "  Signed with: $APPLE_SIGNING_IDENTITY"
+
+  # Verify
+  codesign --verify --strict --verbose=2 "$APP_BUNDLE" 2>&1 | tail -3
 else
   codesign --force --deep --sign - "$APP_BUNDLE"
   echo "  Ad-hoc signed (no Developer ID)"
