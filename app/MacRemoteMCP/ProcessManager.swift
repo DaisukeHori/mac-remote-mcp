@@ -245,9 +245,33 @@ class ProcessManager {
         startCaffeinate()
         startServer()
         startPlaywright()
-        // Tunnel starts after server is up
-        DispatchQueue.global().asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.startQuickTunnel()
+        // Wait for server to be ready, then start tunnel
+        waitForServerAndStartTunnel()
+    }
+
+    private func waitForServerAndStartTunnel(attempts: Int = 0) {
+        guard attempts < 20 else {
+            log("サーバー起動待ちタイムアウト — トンネルを強制起動")
+            DispatchQueue.main.async { [weak self] in
+                self?.startQuickTunnel()
+            }
+            return
+        }
+
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            // Check if server is responding
+            let url = URL(string: "http://127.0.0.1:\(Config.shared.serverPort)/health")!
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                    DispatchQueue.main.async {
+                        self?.log("MCPサーバー応答確認 — トンネル起動")
+                        self?.startQuickTunnel()
+                    }
+                } else {
+                    self?.waitForServerAndStartTunnel(attempts: attempts + 1)
+                }
+            }
+            task.resume()
         }
     }
 
