@@ -11,7 +11,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         NSApp.setActivationPolicy(.regular)
 
         let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 580),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered, defer: false
         )
@@ -26,9 +26,9 @@ class SettingsWindow: NSObject, NSWindowDelegate {
     }
 
     private func buildContent() -> NSView {
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 480))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 580))
 
-        var y = 440
+        var y = 540
 
         // ── Title ──
         let title = makeLabel("MacRemoteMCP 設定", size: 18, bold: true)
@@ -102,6 +102,30 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         autoCheck.state = Config.shared.autoStart ? .on : .off
         autoCheck.tag = 300
         container.addSubview(autoCheck)
+        y -= 36
+
+        // ── Cloudflare Tunnel ──
+        let cfLabel = makeLabel("Cloudflare Tunnel（固定URL）", size: 13, bold: true)
+        cfLabel.frame = NSRect(x: 20, y: y, width: 300, height: 20)
+        container.addSubview(cfLabel)
+        y -= 24
+
+        let cfDesc = makeLabel("空欄＝無料Quick Tunnel（ランダムURL）。トークン入力で固定URL。", size: 10, bold: false)
+        cfDesc.textColor = .secondaryLabelColor
+        cfDesc.frame = NSRect(x: 20, y: y, width: 480, height: 16)
+        container.addSubview(cfDesc)
+        y -= 24
+
+        let cfTokenLabel = makeLabel("Tunnel Token", size: 12, bold: false)
+        cfTokenLabel.frame = NSRect(x: 40, y: y, width: 100, height: 20)
+        container.addSubview(cfTokenLabel)
+
+        let cfTokenField = NSTextField(frame: NSRect(x: 150, y: y, width: 350, height: 22))
+        cfTokenField.stringValue = Config.shared.tunnelToken
+        cfTokenField.placeholderString = "cloudflared tunnel run --token に渡すトークン"
+        cfTokenField.font = NSFont.monospacedSystemFont(ofSize: 10, weight: .regular)
+        cfTokenField.tag = 400
+        container.addSubview(cfTokenField)
         y -= 36
 
         // ── Permission Status ──
@@ -257,10 +281,18 @@ class SettingsWindow: NSObject, NSWindowDelegate {
             envVars["AUTO_START"] = check.state == .on ? "true" : "false"
         }
 
+        // Tunnel token
+        if let field = contentView.viewWithTag(400) as? NSTextField {
+            let token = field.stringValue.trimmingCharacters(in: .whitespaces)
+            if !token.isEmpty {
+                envVars["CLOUDFLARE_TUNNEL_TOKEN"] = token
+            }
+        }
+
         // Save to .env
         let envPath = Config.shared.configDir + "/.env"
         var lines = ["# mac-remote-mcp configuration", ""]
-        for key in ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START"] {
+        for key in ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START", "CLOUDFLARE_TUNNEL_TOKEN"] {
             if let val = envVars[key] {
                 lines.append("\(key)=\(val)")
             }

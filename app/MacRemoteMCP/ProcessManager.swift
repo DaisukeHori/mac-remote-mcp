@@ -175,7 +175,14 @@ class ProcessManager {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: cfPath)
-        process.arguments = ["tunnel", "--url", "http://127.0.0.1:\(config.serverPort)"]
+
+        // Named tunnel (fixed URL) vs Quick tunnel (random URL)
+        if !config.tunnelToken.isEmpty {
+            process.arguments = ["tunnel", "run", "--token", config.tunnelToken]
+            log("固定トンネル起動中（トークン使用）...")
+        } else {
+            process.arguments = ["tunnel", "--url", "http://127.0.0.1:\(config.serverPort)"]
+        }
         process.environment = ["PATH": config.pathEnv]
 
         // cloudflared outputs the URL to stderr
@@ -211,7 +218,11 @@ class ProcessManager {
         do {
             try process.run()
             tunnelProcess = process
-            log("クイックトンネル起動中 (PID: \(process.processIdentifier))...")
+            if config.tunnelToken.isEmpty {
+                log("クイックトンネル起動中 (PID: \(process.processIdentifier))...")
+            } else {
+                log("固定トンネル起動中 (PID: \(process.processIdentifier))...")
+            }
         } catch {
             log("クイックトンネル起動失敗: \(error)")
         }

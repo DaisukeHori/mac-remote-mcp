@@ -135,7 +135,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toggleServerMenuItem.title = serverRunning ? "⏹ MCPサーバーを停止" : "▶ MCPサーバーを起動"
         togglePlaywrightMenuItem.title = playwrightRunning ? "⏹ Playwrightを停止" : "▶ Playwrightを起動"
         toggleCaffeinateMenuItem.title = caffeinateRunning ? "⏹ スリープ防止を解除" : "▶ スリープ防止を開始"
-        toggleTunnelMenuItem.title = tunnelRunning ? "⏹ トンネルを停止" : "▶ クイックトンネル開始（無料）"
+        toggleTunnelMenuItem.title = tunnelRunning ? "⏹ トンネルを停止" : (Config.shared.tunnelToken.isEmpty ? "▶ クイックトンネル開始（無料）" : "▶ 固定トンネル開始")
 
         if let url = tunnelURL {
             tunnelMenuItem.title = "🌐 \(TunnelURLParser.displayURL(url))"

@@ -98,6 +98,22 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "Submitting DMG for notarization..."
+          xcrun notarytool submit app/build/MacRemoteMCP.dmg \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait --timeout 600
+          echo "Stapling notarization ticket..."
+          xcrun stapler staple app/build/MacRemoteMCP.dmg
+          echo "Notarization complete!"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

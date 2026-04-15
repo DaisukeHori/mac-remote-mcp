@@ -11,6 +11,7 @@ class Config {
     let playwrightPort: Int
     let proxyPort: Int
     let autoStart: Bool
+    let tunnelToken: String
     let nodePath: String
     let npxPath: String
     let pathEnv: String
@@ -67,6 +68,7 @@ class Config {
         playwrightPort = Int(envVars["PLAYWRIGHT_PORT"] ?? "3001") ?? 3001
         proxyPort = Int(envVars["PROXY_PORT"] ?? "3002") ?? 3002
         autoStart = (envVars["AUTO_START"] ?? "false").lowercased() == "true"
+        tunnelToken = envVars["CLOUDFLARE_TUNNEL_TOKEN"] ?? ""
 
         // Find node/npx
         let searchPaths = [
@@ -89,7 +91,7 @@ class Config {
             "# Auto-generated on first launch",
             ""
         ]
-        let orderedKeys = ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START"]
+        let orderedKeys = ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START", "CLOUDFLARE_TUNNEL_TOKEN"]
         let defaults: [String: String] = [
             "PORT": "3000",
             "PLAYWRIGHT_PORT": "3001",

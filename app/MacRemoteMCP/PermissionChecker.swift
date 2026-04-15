@@ -1,5 +1,6 @@
 import Cocoa
 import ApplicationServices
+import UniformTypeIdentifiers
 
 class PermissionChecker {
 
@@ -116,27 +117,25 @@ class PermissionChecker {
     // MARK: - Install PPPC Profile
 
     static func installProfile() {
+        // Check bundle first
         let bundlePath = Bundle.main.bundlePath
-        let profilePath = (bundlePath as NSString)
-            .deletingLastPathComponent + "/MacRemoteMCP-Permissions.mobileconfig"
-
-        // Also check inside app bundle
         let bundleProfilePath = bundlePath + "/Contents/Resources/MacRemoteMCP-Permissions.mobileconfig"
 
-        let path: String
         if FileManager.default.fileExists(atPath: bundleProfilePath) {
-            path = bundleProfilePath
-        } else if FileManager.default.fileExists(atPath: profilePath) {
-            path = profilePath
-        } else {
-            let alert = NSAlert()
-            alert.messageText = "構成プロファイルが見つかりません"
-            alert.informativeText = "MacRemoteMCP-Permissions.mobileconfig がアプリと同じフォルダにある必要があります。"
-            alert.runModal()
+            NSWorkspace.shared.open(URL(fileURLWithPath: bundleProfilePath))
             return
         }
 
-        // Open profile installer
-        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        // Show Finder file picker
+        let panel = NSOpenPanel()
+        panel.title = "構成プロファイルを選択"
+        panel.message = "MacRemoteMCP-Permissions.mobileconfig を選択してください"
+        panel.allowedContentTypes = [UTType(filenameExtension: "mobileconfig") ?? .data]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        if panel.runModal() == .OK, let url = panel.url {
+            NSWorkspace.shared.open(url)
+        }
     }
 }
