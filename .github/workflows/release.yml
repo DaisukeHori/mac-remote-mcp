@@ -51,7 +51,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Import Apple certificate
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create temp keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Set keychain search list
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Verify
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
       - name: Build macOS app
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           chmod +x app/build.sh
           cd app && ./build.sh
@@ -62,6 +90,7 @@ jobs:
           ls -la app/build/MacRemoteMCP.app/Contents/MacOS/
           ls -la app/build/MacRemoteMCP.app/Contents/Resources/mcp-server/dist/
           file app/build/MacRemoteMCP.app/Contents/MacOS/MacRemoteMCP
+          codesign -dvv app/build/MacRemoteMCP.app 2>&1 || true
           test -f app/build/MacRemoteMCP.dmg
           test -f app/build/MacRemoteMCP-macOS.zip
 

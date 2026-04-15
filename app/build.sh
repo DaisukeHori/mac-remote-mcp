@@ -75,7 +75,13 @@ echo "  App size: $(du -sh "$APP_BUNDLE" | cut -f1)"
 
 # ── 5. Code sign ─────────────────────────────────────────────
 echo "  Code signing..."
-codesign --force --deep --sign - "$APP_BUNDLE"
+if [ -n "$APPLE_SIGNING_IDENTITY" ]; then
+  codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$APP_BUNDLE"
+  echo "  Signed with: $APPLE_SIGNING_IDENTITY"
+else
+  codesign --force --deep --sign - "$APP_BUNDLE"
+  echo "  Ad-hoc signed (no Developer ID)"
+fi
 
 # ── 6. Create DMG ────────────────────────────────────────────
 echo "  Creating DMG installer..."
