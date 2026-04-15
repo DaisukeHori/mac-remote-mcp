@@ -23,7 +23,8 @@ swiftc \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
   "$APP_DIR/Logic.swift" \
-  "$APP_DIR/PermissionChecker.swift"
+  "$APP_DIR/PermissionChecker.swift" \
+  "$APP_DIR/SettingsWindow.swift"
 
 if swiftc \
   -o "$BUILD_DIR/MacRemoteMCP_x86" \
@@ -34,7 +35,8 @@ if swiftc \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
   "$APP_DIR/Logic.swift" \
-  "$APP_DIR/PermissionChecker.swift" 2>/dev/null; then
+  "$APP_DIR/PermissionChecker.swift" \
+  "$APP_DIR/SettingsWindow.swift" 2>/dev/null; then
   echo "  Creating universal binary..."
   lipo -create "$BUILD_DIR/MacRemoteMCP" "$BUILD_DIR/MacRemoteMCP_x86" \
     -output "$BUILD_DIR/MacRemoteMCP_universal"
@@ -61,6 +63,12 @@ echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 # Copy PPPC profile into bundle
 if [ -f "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" ]; then
   cp "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" "$APP_BUNDLE/Contents/Resources/"
+fi
+
+# Convert icon
+if [ -d "$APP_DIR/AppIcon.iconset" ]; then
+  iconutil -c icns "$APP_DIR/AppIcon.iconset" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns" 2>/dev/null && \
+    echo "  App icon set" || echo "  (iconutil failed, skipping icon)"
 fi
 
 if VERSION=$(git describe --tags --exact-match 2>/dev/null); then

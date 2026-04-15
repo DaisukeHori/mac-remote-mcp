@@ -3,6 +3,7 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var processManager: ProcessManager!
+    private var settingsWindow: SettingsWindow!
     private var statusMenuItem: NSMenuItem!
     private var apiKeyMenuItem: NSMenuItem!
     private var toggleServerMenuItem: NSMenuItem!
@@ -13,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         processManager = ProcessManager()
+        settingsWindow = SettingsWindow()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
@@ -227,15 +229,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openConfig() {
-        let envFile = Config.shared.configDir + "/.env"
-        if FileManager.default.fileExists(atPath: envFile) {
-            NSWorkspace.shared.open(URL(fileURLWithPath: envFile))
-        } else {
-            let alert = NSAlert()
-            alert.messageText = ".envファイルが見つかりません"
-            alert.informativeText = "「すべて起動」を一度実行するとAPIキーが自動生成されます。\n場所: ~/.mac-remote-mcp/.env"
-            alert.runModal()
-        }
+        settingsWindow.show()
     }
 
     @objc private func setupPermissions() {

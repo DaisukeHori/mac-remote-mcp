@@ -46,4 +46,5 @@ jobs:
             app/MacRemoteMCP/Config.swift \
             app/MacRemoteMCP/Logic.swift \
             app/MacRemoteMCP/PermissionChecker.swift \
+            app/MacRemoteMCP/SettingsWindow.swift \
             2>&1 || echo "Compile check failed (expected in some CI environments)"
