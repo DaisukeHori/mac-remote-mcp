@@ -18,6 +18,7 @@ swiftc \
   -o "$BUILD_DIR/MacRemoteMCP" \
   -framework Cocoa -framework Security \
   -target arm64-apple-macos13 -O \
+  "$APP_DIR/main.swift" \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
@@ -27,6 +28,7 @@ if swiftc \
   -o "$BUILD_DIR/MacRemoteMCP_x86" \
   -framework Cocoa -framework Security \
   -target x86_64-apple-macos13 -O \
+  "$APP_DIR/main.swift" \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \

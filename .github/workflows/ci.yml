@@ -40,6 +40,7 @@ jobs:
             -framework Cocoa \
             -framework Security \
             -target arm64-apple-macos13 \
+            app/MacRemoteMCP/main.swift \
             app/MacRemoteMCP/AppDelegate.swift \
             app/MacRemoteMCP/ProcessManager.swift \
             app/MacRemoteMCP/Config.swift \
