@@ -22,7 +22,8 @@ swiftc \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
-  "$APP_DIR/Logic.swift"
+  "$APP_DIR/Logic.swift" \
+  "$APP_DIR/PermissionChecker.swift"
 
 if swiftc \
   -o "$BUILD_DIR/MacRemoteMCP_x86" \
@@ -32,7 +33,8 @@ if swiftc \
   "$APP_DIR/AppDelegate.swift" \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
-  "$APP_DIR/Logic.swift" 2>/dev/null; then
+  "$APP_DIR/Logic.swift" \
+  "$APP_DIR/PermissionChecker.swift" 2>/dev/null; then
   echo "  Creating universal binary..."
   lipo -create "$BUILD_DIR/MacRemoteMCP" "$BUILD_DIR/MacRemoteMCP_x86" \
     -output "$BUILD_DIR/MacRemoteMCP_universal"
@@ -55,6 +57,11 @@ mv "$BUILD_DIR/MacRemoteMCP" "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
 chmod +x "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
 cp "$APP_DIR/Info.plist" "$APP_BUNDLE/Contents/"
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
+
+# Copy PPPC profile into bundle
+if [ -f "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" ]; then
+  cp "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" "$APP_BUNDLE/Contents/Resources/"
+fi
 
 if VERSION=$(git describe --tags --exact-match 2>/dev/null); then
   VERSION="${VERSION#v}"

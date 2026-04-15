@@ -28,6 +28,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         buildMenu()
 
+        // Check permissions on first launch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            PermissionChecker.showPermissionDialog()
+        }
+
         if Config.shared.autoStart {
             processManager.startAll()
             updateMenuState()
@@ -90,12 +95,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // ログ・設定
+        // ログ・設定・権限
         let logsItem = NSMenuItem(title: "ログを開く...", action: #selector(openLogs), keyEquivalent: "l")
         menu.addItem(logsItem)
 
         let configItem = NSMenuItem(title: "設定を編集...", action: #selector(openConfig), keyEquivalent: ",")
         menu.addItem(configItem)
+
+        let permItem = NSMenuItem(title: "権限を設定...", action: #selector(setupPermissions), keyEquivalent: "")
+        menu.addItem(permItem)
+
+        let profileItem = NSMenuItem(title: "構成プロファイルをインストール...", action: #selector(installProfile), keyEquivalent: "")
+        menu.addItem(profileItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -225,6 +236,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             alert.informativeText = "「すべて起動」を一度実行するとAPIキーが自動生成されます。\n場所: ~/.mac-remote-mcp/.env"
             alert.runModal()
         }
+    }
+
+    @objc private func setupPermissions() {
+        PermissionChecker.showPermissionDialog()
+    }
+
+    @objc private func installProfile() {
+        PermissionChecker.installProfile()
     }
 
     @objc private func quit() {

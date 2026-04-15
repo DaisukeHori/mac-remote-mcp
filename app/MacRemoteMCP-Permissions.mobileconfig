@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadDescription</key>
+            <string>MacRemoteMCP Privacy Preferences Policy Control</string>
+            <key>PayloadDisplayName</key>
+            <string>MacRemoteMCP 権限設定</string>
+            <key>PayloadIdentifier</key>
+            <string>com.revol.mac-remote-mcp.pppc</string>
+            <key>PayloadType</key>
+            <string>com.apple.TCC.configuration-profile-policy</string>
+            <key>PayloadUUID</key>
+            <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>Services</key>
+            <dict>
+                <!-- Accessibility: MacRemoteMCP.app -->
+                <key>Accessibility</key>
+                <array>
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "com.revol.mac-remote-mcp" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = PW644RQ3ZR</string>
+                        <key>IdentifierType</key>
+                        <string>bundleID</string>
+                        <key>Identifier</key>
+                        <string>com.revol.mac-remote-mcp</string>
+                        <key>StaticCode</key>
+                        <false/>
+                    </dict>
+                    <!-- Accessibility: node (MCP server child process) -->
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "node" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = HX7739G8FX</string>
+                        <key>IdentifierType</key>
+                        <string>path</string>
+                        <key>Identifier</key>
+                        <string>/usr/local/bin/node</string>
+                        <key>StaticCode</key>
+                        <false/>
+                    </dict>
+                </array>
+                <!-- AppleEvents (Automation): MacRemoteMCP.app → all apps -->
+                <key>AppleEvents</key>
+                <array>
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "com.revol.mac-remote-mcp" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = PW644RQ3ZR</string>
+                        <key>IdentifierType</key>
+                        <string>bundleID</string>
+                        <key>Identifier</key>
+                        <string>com.revol.mac-remote-mcp</string>
+                        <key>AEReceiverIdentifier</key>
+                        <string>com.apple.systemevents</string>
+                        <key>AEReceiverIdentifierType</key>
+                        <string>bundleID</string>
+                        <key>AEReceiverCodeRequirement</key>
+                        <string>identifier "com.apple.systemevents" and anchor apple</string>
+                    </dict>
+                    <!-- node → System Events -->
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "node" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = HX7739G8FX</string>
+                        <key>IdentifierType</key>
+                        <string>path</string>
+                        <key>Identifier</key>
+                        <string>/usr/local/bin/node</string>
+                        <key>AEReceiverIdentifier</key>
+                        <string>com.apple.systemevents</string>
+                        <key>AEReceiverIdentifierType</key>
+                        <string>bundleID</string>
+                        <key>AEReceiverCodeRequirement</key>
+                        <string>identifier "com.apple.systemevents" and anchor apple</string>
+                    </dict>
+                    <!-- node → Finder -->
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "node" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = HX7739G8FX</string>
+                        <key>IdentifierType</key>
+                        <string>path</string>
+                        <key>Identifier</key>
+                        <string>/usr/local/bin/node</string>
+                        <key>AEReceiverIdentifier</key>
+                        <string>com.apple.finder</string>
+                        <key>AEReceiverIdentifierType</key>
+                        <string>bundleID</string>
+                        <key>AEReceiverCodeRequirement</key>
+                        <string>identifier "com.apple.finder" and anchor apple</string>
+                    </dict>
+                </array>
+                <!-- SystemPolicyAllFiles (Full Disk Access) -->
+                <key>SystemPolicyAllFiles</key>
+                <array>
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "com.revol.mac-remote-mcp" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = PW644RQ3ZR</string>
+                        <key>IdentifierType</key>
+                        <string>bundleID</string>
+                        <key>Identifier</key>
+                        <string>com.revol.mac-remote-mcp</string>
+                        <key>StaticCode</key>
+                        <false/>
+                    </dict>
+                    <dict>
+                        <key>Allowed</key>
+                        <true/>
+                        <key>CodeRequirement</key>
+                        <string>identifier "node" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = HX7739G8FX</string>
+                        <key>IdentifierType</key>
+                        <string>path</string>
+                        <key>Identifier</key>
+                        <string>/usr/local/bin/node</string>
+                        <key>StaticCode</key>
+                        <false/>
+                    </dict>
+                </array>
+            </dict>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>MacRemoteMCPのアクセシビリティ・自動化・フルディスクアクセス権限を自動許可します。画面収録のみ手動で許可が必要です。</string>
+    <key>PayloadDisplayName</key>
+    <string>MacRemoteMCP 権限プロファイル</string>
+    <key>PayloadIdentifier</key>
+    <string>com.revol.mac-remote-mcp.profile</string>
+    <key>PayloadOrganization</key>
+    <string>Revol Corporation</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>
