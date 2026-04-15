@@ -2,6 +2,7 @@ import Cocoa
 
 class SettingsWindow: NSObject, NSWindowDelegate {
     private var window: NSWindow?
+    private var apiField: NSTextField?
 
     func show() {
         if let w = window, w.isVisible { w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
@@ -41,19 +42,29 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         container.addSubview(apiLabel)
         y -= 28
 
-        let apiField = NSTextField(frame: NSRect(x: 20, y: y, width: 380, height: 24))
-        apiField.stringValue = Config.shared.apiKey
-        apiField.isEditable = false
-        apiField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        apiField.tag = 100
-        container.addSubview(apiField)
+        let apiFieldLocal = NSTextField(frame: NSRect(x: 20, y: y, width: 340, height: 24))
+        apiFieldLocal.stringValue = Config.shared.apiKey
+        apiFieldLocal.isEditable = false
+        apiFieldLocal.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        apiFieldLocal.tag = 100
+        container.addSubview(apiFieldLocal)
+        self.apiField = apiFieldLocal
 
-        let copyBtn = NSButton(frame: NSRect(x: 410, y: y, width: 90, height: 24))
+        let copyBtn = NSButton(frame: NSRect(x: 365, y: y, width: 65, height: 24))
         copyBtn.title = "コピー"
         copyBtn.bezelStyle = .rounded
+        copyBtn.font = NSFont.systemFont(ofSize: 11)
         copyBtn.target = self
         copyBtn.action = #selector(copyApiKey)
         container.addSubview(copyBtn)
+
+        let rotateBtn = NSButton(frame: NSRect(x: 435, y: y, width: 65, height: 24))
+        rotateBtn.title = "再生成"
+        rotateBtn.bezelStyle = .rounded
+        rotateBtn.font = NSFont.systemFont(ofSize: 11)
+        rotateBtn.target = self
+        rotateBtn.action = #selector(rotateApiKey)
+        container.addSubview(rotateBtn)
         y -= 36
 
         // ── Ports ──
@@ -170,7 +181,46 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
     @objc private func copyApiKey() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(Config.shared.apiKey, forType: .string)
+        NSPasteboard.general.setString(apiField?.stringValue ?? Config.shared.apiKey, forType: .string)
+    }
+
+    @objc private func rotateApiKey() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "APIキーを再生成しますか？"
+        alert.informativeText = "現在のキーは無効になります。\nClaude.aiのコネクター設定も更新が必要です。"
+        alert.addButton(withTitle: "再生成")
+        alert.addButton(withTitle: "キャンセル")
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return }
+
+        // Generate new key
+        var bytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        let newKey = bytes.map { String(format: "%02x", $0) }.joined()
+
+        // Update .env file
+        let envPath = Config.shared.configDir + "/.env"
+        if var contents = try? String(contentsOfFile: envPath, encoding: .utf8) {
+            if let range = contents.range(of: "MCP_API_KEY=.*", options: .regularExpression) {
+                contents.replaceSubrange(range, with: "MCP_API_KEY=\(newKey)")
+            } else {
+                contents += "\nMCP_API_KEY=\(newKey)\n"
+            }
+            try? contents.write(toFile: envPath, atomically: true, encoding: .utf8)
+        }
+
+        // Update UI
+        apiField?.stringValue = newKey
+
+        // Copy to clipboard
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(newKey, forType: .string)
+
+        let doneAlert = NSAlert()
+        doneAlert.messageText = "APIキーを再生成しました"
+        doneAlert.informativeText = "新しいキーがクリップボードにコピーされました。\nアプリを再起動すると新しいキーが適用されます。"
+        doneAlert.runModal()
     }
 
     @objc private func openAccessibility() {
