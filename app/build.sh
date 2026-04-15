@@ -112,17 +112,10 @@ if [ -n "$APPLE_SIGNING_IDENTITY" ]; then
     fi
   done
 
-  # 3. Sign the main executable with entitlements
-  echo "  Signing main binary..."
-  ENTITLEMENTS="$APP_DIR/Entitlements.plist"
-  codesign --force --options runtime --timestamp \
-    --entitlements "$ENTITLEMENTS" \
-    --sign "$APPLE_SIGNING_IDENTITY" \
-    "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
-
-  # 4. Sign the .app bundle (top-level, no --deep)
+  # 3. Sign the .app bundle (single pass with entitlements + hardened runtime)
   echo "  Signing app bundle..."
-  codesign --force --options runtime --timestamp \
+  ENTITLEMENTS="$APP_DIR/Entitlements.plist"
+  codesign --force --deep --options runtime --timestamp \
     --entitlements "$ENTITLEMENTS" \
     --sign "$APPLE_SIGNING_IDENTITY" \
     "$APP_BUNDLE"
