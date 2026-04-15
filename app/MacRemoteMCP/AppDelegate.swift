@@ -216,13 +216,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openConfig() {
-        let envFile = Config.shared.installDir + "/.env"
+        let envFile = Config.shared.configDir + "/.env"
         if FileManager.default.fileExists(atPath: envFile) {
             NSWorkspace.shared.open(URL(fileURLWithPath: envFile))
         } else {
             let alert = NSAlert()
             alert.messageText = ".envファイルが見つかりません"
-            alert.informativeText = "初回はアプリ起動時に自動生成されます。\nまたは scripts/setup.sh を実行してください。"
+            alert.informativeText = "「すべて起動」を一度実行するとAPIキーが自動生成されます。\n場所: ~/.mac-remote-mcp/.env"
             alert.runModal()
         }
     }
