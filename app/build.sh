@@ -94,6 +94,28 @@ echo "  App size: $(du -sh "$APP_BUNDLE" | cut -f1)"
 # ── 5. Code sign ─────────────────────────────────────────────
 echo "  Code signing..."
 if [ -n "$APPLE_SIGNING_IDENTITY" ]; then
+  # Sign all native binaries inside node_modules first (required for notarization)
+  echo "  Signing native binaries in node_modules..."
+  find "$APP_BUNDLE/Contents/Resources/mcp-server/node_modules" \
+    -type f \( -name "*.node" -o -name "*.dylib" -o -name "*.so" \) \
+    2>/dev/null | while read f; do
+    codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
+      echo "    Signed: $(basename "$f")" || true
+  done
+
+  # Sign any Mach-O binaries in node_modules
+  find "$APP_BUNDLE/Contents/Resources/mcp-server/node_modules" \
+    -type f -perm +111 2>/dev/null | while read f; do
+    file "$f" | grep -q "Mach-O" && \
+      codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$f" 2>/dev/null && \
+      echo "    Signed: $(basename "$f")" || true
+  done
+
+  # Sign the main binary
+  codesign --force --options runtime --sign "$APPLE_SIGNING_IDENTITY" \
+    "$APP_BUNDLE/Contents/MacOS/MacRemoteMCP"
+
+  # Sign the entire bundle
   codesign --force --deep --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$APP_BUNDLE"
   echo "  Signed with: $APPLE_SIGNING_IDENTITY"
 else

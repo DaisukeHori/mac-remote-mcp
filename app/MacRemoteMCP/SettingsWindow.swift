@@ -294,7 +294,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         guard let contentView = window?.contentView else { return }
 
         var envVars: [String: String] = [:]
-        envVars["MCP_API_KEY"] = Config.shared.apiKey
+        envVars["MCP_API_KEY"] = apiField?.stringValue ?? Config.shared.apiKey
 
         // Read port fields
         let portKeys = ["PORT", "PLAYWRIGHT_PORT", "PROXY_PORT"]
@@ -328,10 +328,19 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         lines.append("")
         try? lines.joined(separator: "\n").write(toFile: envPath, atomically: true, encoding: .utf8)
 
-        let alert = NSAlert()
-        alert.messageText = "設定を保存しました"
-        alert.informativeText = "変更を反映するにはアプリを再起動してください。"
-        alert.runModal()
+        // Auto-restart
+        Self.relaunchApp()
+    }
+
+    static func relaunchApp() {
+        let bundlePath = Bundle.main.bundlePath
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        task.arguments = ["-n", bundlePath, "--args", "--relaunch"]
+        try? task.run()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            NSApp.terminate(nil)
+        }
     }
 
     @objc private func closeWindow() {

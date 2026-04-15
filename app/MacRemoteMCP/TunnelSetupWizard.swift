@@ -10,7 +10,8 @@ class TunnelSetupWizard {
 
         // Step 2: List zones, pick domain
         guard let zones = fetchZones(apiToken: apiToken) else {
-            showError("ドメイン一覧の取得に失敗しました。\nAPIトークンを確認してください。")
+            let testData = cfAPI(path: "/client/v4/zones?per_page=1", apiToken: apiToken)
+            showError("ドメイン一覧の取得に失敗しました。\n\n" + extractError(from: testData))
             completion(nil); return
         }
         guard let zone = pickZone(zones: zones) else { completion(nil); return }
@@ -26,15 +27,28 @@ class TunnelSetupWizard {
         }
 
         let tunnelName = "mac-remote-mcp-\(subdomain)"
-        guard let tunnel = createTunnel(apiToken: apiToken, accountId: accountId, name: tunnelName) else {
-            showError("トンネルの作成に失敗しました。")
+        let tunnelResult = createTunnelWithError(apiToken: apiToken, accountId: accountId, name: tunnelName)
+        guard let tunnel = tunnelResult.tunnel else {
+            showError("トンネルの作成に失敗しました。\n\n" + extractError(from: tunnelResult.rawResponse))
             completion(nil); return
         }
 
         // Step 5: Configure DNS
-        let dnsOk = createDNS(apiToken: apiToken, zoneId: zone.id, hostname: hostname, tunnelId: tunnel.id)
+        let dnsResult = cfAPI(
+            path: "/client/v4/zones/\(zone.id)/dns_records",
+            apiToken: apiToken,
+            method: "POST",
+            body: [
+                "type": "CNAME",
+                "name": hostname,
+                "content": "\(tunnel.id).cfargotunnel.com",
+                "proxied": true,
+                "comment": "MacRemoteMCP tunnel"
+            ]
+        )
+        let dnsOk = dnsResult?["success"] as? Bool ?? false
         if !dnsOk {
-            showError("DNS設定に失敗しました。\n\(hostname) が既に存在する可能性があります。")
+            showError("DNS設定に失敗しました。\n\n" + extractError(from: dnsResult))
         }
 
         // Step 6: Configure tunnel ingress
@@ -50,6 +64,17 @@ class TunnelSetupWizard {
         }
 
         // Success!
+        // Save token to .env
+        let envPath = Config.shared.configDir + "/.env"
+        if var contents = try? String(contentsOfFile: envPath, encoding: .utf8) {
+            if let range = contents.range(of: "CLOUDFLARE_TUNNEL_TOKEN=.*", options: .regularExpression) {
+                contents.replaceSubrange(range, with: "CLOUDFLARE_TUNNEL_TOKEN=\(token)")
+            } else {
+                contents += "CLOUDFLARE_TUNNEL_TOKEN=\(token)\n"
+            }
+            try? contents.write(toFile: envPath, atomically: true, encoding: .utf8)
+        }
+
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = "固定URLの設定が完了しました！"
@@ -57,12 +82,15 @@ class TunnelSetupWizard {
         URL: https://\(hostname)
         MCP: https://\(hostname)/mcp
 
-        トンネルトークンは自動保存されました。
-        「保存」を押してからアプリを再起動してください。
+        「再起動」を押すと新しい設定で起動します。
         """
+        alert.addButton(withTitle: "再起動")
         alert.runModal()
 
         completion(token)
+
+        // Relaunch
+        SettingsWindow.relaunchApp()
     }
 
     // MARK: - Step 1: API Token
@@ -195,7 +223,10 @@ class TunnelSetupWizard {
     }
 
     private static func createTunnel(apiToken: String, accountId: String, name: String) -> Tunnel? {
-        // Generate tunnel secret
+        return createTunnelWithError(apiToken: apiToken, accountId: accountId, name: name).tunnel
+    }
+
+    private static func createTunnelWithError(apiToken: String, accountId: String, name: String) -> (tunnel: Tunnel?, rawResponse: [String: Any]?) {
         var bytes = [UInt8](repeating: 0, count: 32)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         let secret = Data(bytes).base64EncodedString()
@@ -206,17 +237,20 @@ class TunnelSetupWizard {
             "config_src": "cloudflare"
         ]
 
-        guard let data = cfAPI(
+        let data = cfAPI(
             path: "/client/v4/accounts/\(accountId)/cfd_tunnel",
             apiToken: apiToken,
             method: "POST",
             body: body
-        ) else { return nil }
+        )
 
-        guard let result = data["result"] as? [String: Any],
+        guard let data = data,
+              let result = data["result"] as? [String: Any],
               let id = result["id"] as? String,
-              let rname = result["name"] as? String else { return nil }
-        return Tunnel(id: id, name: rname)
+              let rname = result["name"] as? String else {
+            return (nil, data)
+        }
+        return (Tunnel(id: id, name: rname), data)
     }
 
     private static func createDNS(apiToken: String, zoneId: String, hostname: String, tunnelId: String) -> Bool {
@@ -267,7 +301,7 @@ class TunnelSetupWizard {
 
     private static func cfAPI(path: String, apiToken: String, method: String = "GET", body: [String: Any]? = nil) -> [String: Any]? {
         let url = "https://api.cloudflare.com\(path)"
-        var args = ["curl", "-s", "-X", method, url,
+        var args = ["-s", "-X", method, url,
                     "-H", "Authorization: Bearer \(apiToken)",
                     "-H", "Content-Type: application/json"]
 
@@ -280,7 +314,7 @@ class TunnelSetupWizard {
 
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
-        task.arguments = Array(args.dropFirst()) // remove "curl" from args
+        task.arguments = args
         let pipe = Pipe()
         task.standardOutput = pipe
         task.standardError = Pipe()
@@ -293,6 +327,55 @@ class TunnelSetupWizard {
         } catch {
             return nil
         }
+    }
+
+    /// Extract error message from Cloudflare API response and translate common ones to Japanese
+    static func extractError(from data: [String: Any]?) -> String {
+        guard let data = data else {
+            return "Cloudflareに接続できませんでした。\nインターネット接続を確認してください。"
+        }
+
+        if let errors = data["errors"] as? [[String: Any]] {
+            let messages = errors.compactMap { error -> String? in
+                let code = error["code"] as? Int ?? 0
+                let msg = error["message"] as? String ?? "不明なエラー"
+                return translateError(code: code, message: msg)
+            }
+            if !messages.isEmpty {
+                return messages.joined(separator: "\n")
+            }
+        }
+
+        if let success = data["success"] as? Bool, !success {
+            return "Cloudflare APIがエラーを返しました。\nAPIトークンの権限を確認してください。"
+        }
+
+        return "不明なエラーが発生しました。"
+    }
+
+    private static func translateError(code: Int, message: String) -> String {
+        // Common Cloudflare error translations
+        let lower = message.lowercased()
+        if lower.contains("authentication") || lower.contains("unauthorized") || code == 10000 {
+            return "認証エラー: APIトークンが無効です。\n新しいトークンを作成してください。"
+        }
+        if lower.contains("permission") || lower.contains("forbidden") {
+            return "権限エラー: このAPIトークンに必要な権限がありません。\nTunnel/DNS/Zone/Account設定の権限を確認してください。"
+        }
+        if lower.contains("already exists") || lower.contains("duplicate") {
+            return "既に存在するエラー: 同じ名前のリソースが既に作成されています。\n別の名前を試すか、Cloudflareダッシュボードで確認してください。"
+        }
+        if lower.contains("not found") {
+            return "見つかりません: 指定されたリソースが存在しません。"
+        }
+        if lower.contains("rate limit") {
+            return "レート制限: リクエストが多すぎます。少し待ってから再試行してください。"
+        }
+        if lower.contains("record already exists") || code == 81057 || code == 81058 {
+            return "DNSレコードが既に存在します。\n別のサブドメインを試すか、Cloudflareダッシュボードで既存のレコードを削除してください。"
+        }
+        // Return original with code
+        return "エラー(\(code)): \(message)"
     }
 
     // MARK: - Helpers
