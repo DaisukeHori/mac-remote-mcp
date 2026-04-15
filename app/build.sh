@@ -24,7 +24,8 @@ swiftc \
   "$APP_DIR/Config.swift" \
   "$APP_DIR/Logic.swift" \
   "$APP_DIR/PermissionChecker.swift" \
-  "$APP_DIR/SettingsWindow.swift"
+  "$APP_DIR/SettingsWindow.swift" \
+  "$APP_DIR/TunnelSetupWizard.swift"
 
 if swiftc \
   -o "$BUILD_DIR/MacRemoteMCP_x86" \

@@ -11,7 +11,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         NSApp.setActivationPolicy(.regular)
 
         let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 580),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 620),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered, defer: false
         )
@@ -31,9 +31,9 @@ class SettingsWindow: NSObject, NSWindowDelegate {
     }
 
     private func buildContent() -> NSView {
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 580))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 620))
 
-        var y = 540
+        var y = 580
 
         // ── Title ──
         let title = makeLabel("MacRemoteMCP 設定", size: 18, bold: true)
@@ -127,10 +127,23 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
         let cfTokenField = NSTextField(frame: NSRect(x: 150, y: y, width: 350, height: 22))
         cfTokenField.stringValue = Config.shared.tunnelToken
-        cfTokenField.placeholderString = "cloudflared tunnel run --token に渡すトークン"
+        cfTokenField.placeholderString = "自動設定されます（手動入力も可）"
         cfTokenField.font = NSFont.monospacedSystemFont(ofSize: 10, weight: .regular)
         cfTokenField.tag = 400
         container.addSubview(cfTokenField)
+        y -= 30
+
+        let setupBtn = NSButton(frame: NSRect(x: 40, y: y, width: 220, height: 28))
+        setupBtn.title = "固定URLをセットアップ..."
+        setupBtn.bezelStyle = .rounded
+        setupBtn.target = self
+        setupBtn.action = #selector(runTunnelSetup)
+        container.addSubview(setupBtn)
+
+        let helpLabel = makeLabel("Cloudflareアカウントがあればボタン1つで完了", size: 10, bold: false)
+        helpLabel.textColor = .secondaryLabelColor
+        helpLabel.frame = NSRect(x: 270, y: y + 4, width: 230, height: 16)
+        container.addSubview(helpLabel)
         y -= 36
 
         // ── Permission Status ──
@@ -264,6 +277,16 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         let envFile = Config.shared.configDir + "/.env"
         if FileManager.default.fileExists(atPath: envFile) {
             NSWorkspace.shared.open(URL(fileURLWithPath: envFile))
+        }
+    }
+
+    @objc private func runTunnelSetup() {
+        TunnelSetupWizard.run { [weak self] token in
+            guard let token = token, let contentView = self?.window?.contentView else { return }
+            // Update the token field in the UI
+            if let field = contentView.viewWithTag(400) as? NSTextField {
+                field.stringValue = token
+            }
         }
     }
 
