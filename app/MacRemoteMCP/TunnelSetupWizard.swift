@@ -69,41 +69,45 @@ class TunnelSetupWizard {
 
     private static func askApiToken() -> String? {
         let alert = NSAlert()
-        alert.messageText = "Cloudflare APIトークン"
+        alert.messageText = "Step 1: Cloudflare APIトークンを作成"
         alert.informativeText = """
-        Cloudflareの管理画面からAPIトークンを作成してください。
-
-        1. 下の「トークンを作成」をクリック
-        2.「カスタムトークンを作成する」の「始める」を選択
-        3. トークン名: mac-remote-mcp（何でもOK）
-        4. 権限を以下の4つ追加：
-           ・アカウント ／ Cloudflare Tunnel ／ 編集
-           ・アカウント ／ アカウント設定 ／ 読み取り
-           ・ゾーン ／ DNS ／ 編集
-           ・ゾーン ／ ゾーン ／ 読み取り
-        5.「概要に進む」→「トークンを作成」
-        6. 表示されたトークンをここに貼り付け
+        まだトークンを持っていない場合：
+        ━━━━━━━━━━━━━━━━━━━━━━
+        ① 下の「Cloudflareを開く」をクリック
+        ② 「カスタムトークンを作成する」の横の
+            「始める」ボタンをクリック
+        ③ トークン名に適当な名前を入力
+            （例: MAC-MCP）
+        ④ 「権限」の欄に以下の4行を追加：
+            アカウント ／ Cloudflare Tunnel ／ 編集
+            アカウント ／ アカウント設定 ／ 読み取り
+            ゾーン ／ DNS ／ 編集
+            ゾーン ／ ゾーン ／ 読み取り
+        ⑤ 下の「概要に進む」をクリック
+        ⑥ 「トークンを作成する」をクリック
+        ⑦ 表示された cfut_xxxxx... をコピー
+        ━━━━━━━━━━━━━━━━━━━━━━
+        コピーしたトークンを下に貼り付けてください。
         """
         alert.addButton(withTitle: "次へ")
-        alert.addButton(withTitle: "トークンを作成（ブラウザ）")
+        alert.addButton(withTitle: "Cloudflareを開く")
         alert.addButton(withTitle: "キャンセル")
 
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 400, height: 24))
-        input.placeholderString = "Cloudflare APIトークンを貼り付け"
+        input.placeholderString = "ここにトークンを貼り付け（cfut_で始まる文字列）"
         input.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         alert.accessoryView = input
 
         let response = alert.runModal()
         if response == .alertSecondButtonReturn {
             NSWorkspace.shared.open(URL(string: "https://dash.cloudflare.com/profile/api-tokens")!)
-            // Show again after browser opens
             return askApiToken()
         }
         guard response == .alertFirstButtonReturn else { return nil }
 
         let token = input.stringValue.trimmingCharacters(in: .whitespaces)
-        guard !token.isEmpty else {
-            showError("APIトークンが入力されていません。")
+        if token.isEmpty {
+            showError("トークンが入力されていません。\nCloudflareの画面で「トークンを作成する」を押すと\ncfut_で始まる文字列が表示されます。\nそれをコピーして貼り付けてください。")
             return nil
         }
         return token
@@ -124,13 +128,13 @@ class TunnelSetupWizard {
 
     private static func pickZone(zones: [Zone]) -> Zone? {
         if zones.isEmpty {
-            showError("Cloudflareにドメインが登録されていません。\n先にドメインを追加してください。")
+            showError("Cloudflareにドメインが登録されていません。\n先にCloudflareのダッシュボードでドメインを追加してください。\n\nhttps://dash.cloudflare.com")
             return nil
         }
 
         let alert = NSAlert()
-        alert.messageText = "ドメインを選択"
-        alert.informativeText = "固定URLに使用するドメインを選択してください。"
+        alert.messageText = "Step 2: ドメインを選択"
+        alert.informativeText = "MacRemoteMCPの固定URLに使うドメインを選んでください。\n\n例: appserver.tokyo を選ぶと\n→ mac-remote.appserver.tokyo のようなURLになります。"
         alert.addButton(withTitle: "次へ")
         alert.addButton(withTitle: "キャンセル")
 
@@ -149,9 +153,17 @@ class TunnelSetupWizard {
 
     private static func askSubdomain(domain: String) -> String? {
         let alert = NSAlert()
-        alert.messageText = "サブドメインを入力"
-        alert.informativeText = "例: mac-remote → mac-remote.\(domain)"
-        alert.addButton(withTitle: "作成")
+        alert.messageText = "Step 3: サブドメインを決める"
+        alert.informativeText = """
+        好きなサブドメイン名を入力してください。
+
+        例: 「mac-remote」と入力すると
+        → https://mac-remote.\(domain)
+        　にアクセスできるようになります。
+
+        ※ 英数字とハイフンのみ使えます
+        """
+        alert.addButton(withTitle: "作成する！")
         alert.addButton(withTitle: "キャンセル")
 
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
