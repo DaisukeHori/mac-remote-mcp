@@ -4,7 +4,10 @@ class SettingsWindow: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func show() {
-        if let w = window, w.isVisible { w.makeKeyAndOrderFront(nil); return }
+        if let w = window, w.isVisible { w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
+
+        // Temporarily show in dock so window can receive focus
+        NSApp.setActivationPolicy(.regular)
 
         let w = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 480),
@@ -223,5 +226,12 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
     @objc private func closeWindow() {
         window?.close()
+        // Switch back to menu bar only (no dock icon)
+        NSApp.setActivationPolicy(.accessory)
+    }
+
+    // NSWindowDelegate
+    func windowWillClose(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
     }
 }

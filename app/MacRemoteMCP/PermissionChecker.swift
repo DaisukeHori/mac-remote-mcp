@@ -35,8 +35,12 @@ class PermissionChecker {
     // MARK: - Screen Recording
 
     static func checkScreenRecording() -> Bool {
-        // Try a test screenshot to check screen recording permission
-        // CGWindowListCreateImage returns nil if permission is denied
+        // CGWindowListCreateImage returns a valid image even without screen recording
+        // on some macOS versions. Use CGPreflightScreenCaptureAccess on macOS 15+
+        if #available(macOS 15, *) {
+            return CGPreflightScreenCaptureAccess()
+        }
+        // Fallback: try creating a small screenshot
         let testImage = CGWindowListCreateImage(
             CGRect(x: 0, y: 0, width: 1, height: 1),
             .optionOnScreenOnly,
