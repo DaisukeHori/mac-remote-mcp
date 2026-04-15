@@ -72,26 +72,28 @@ Returns:
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async () => {
-      const jxa = `
-function run() {
-  const se = Application("System Events");
-  const procs = se.processes.whose({backgroundOnly: false})();
-  const apps = [];
-  for (const p of procs) {
-    try {
-      apps.push({
-        name: p.name(),
-        frontmost: p.frontmost(),
-        visible: p.visible(),
-      });
-    } catch(e) {}
-  }
-  return JSON.stringify(apps);
-}
-`;
-      const result = await runOsascriptJXA(jxa, 10000);
+      try {
+        // Try shell-based approach first (no accessibility permission needed)
+        const result = await runShellCommand(
+          `osascript -e 'tell application "System Events" to get name of every process whose background only is false'`
+        );
+        if (result.exitCode === 0 && result.stdout.trim()) {
+          const names = result.stdout.trim().split(", ");
+          const apps = names.map((name: string) => ({ name: name.trim(), frontmost: false, visible: true }));
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ apps }, null, 2) }],
+          };
+        }
+      } catch { /* fall through */ }
+
+      // Fallback: use lsappinfo (always works, no permissions needed)
+      const result = await runShellCommand(
+        `lsappinfo list | grep -E '^ *"LSDisplayName"|"CFBundleName"' | head -50 | sed 's/.*= "//;s/".*//'`
+      );
+      const names = result.stdout.trim().split("\n").filter((n: string) => n.length > 0);
+      const apps = names.map((name: string) => ({ name }));
       return {
-        content: [{ type: "text", text: result.stdout }],
+        content: [{ type: "text" as const, text: JSON.stringify({ apps }, null, 2) }],
       };
     }
   );

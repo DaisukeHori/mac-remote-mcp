@@ -5,6 +5,7 @@ class Config {
 
     let installDir: String
     let logDir: String
+    let configDir: String
     let apiKey: String
     let serverPort: Int
     let playwrightPort: Int
@@ -15,34 +16,31 @@ class Config {
     let pathEnv: String
 
     private init() {
-        // Determine install directory
-        // Priority: 1) Inside .app bundle  2) Adjacent to .app  3) ~/mac-remote-mcp
+        let home = NSHomeDirectory()
         let bundlePath = Bundle.main.bundlePath
         let bundleResources = bundlePath + "/Contents/Resources/mcp-server"
         let appParent = (bundlePath as NSString).deletingLastPathComponent
 
+        // Install dir: where dist/index.js lives
         if FileManager.default.fileExists(atPath: bundleResources + "/dist/index.js") {
             installDir = bundleResources
         } else if FileManager.default.fileExists(atPath: appParent + "/dist/index.js") {
             installDir = appParent
         } else if FileManager.default.fileExists(atPath: appParent + "/mac-remote-mcp/dist/index.js") {
             installDir = appParent + "/mac-remote-mcp"
+        } else if FileManager.default.fileExists(atPath: home + "/mac-remote-mcp/dist/index.js") {
+            installDir = home + "/mac-remote-mcp"
         } else {
-            let home = NSHomeDirectory()
-            if FileManager.default.fileExists(atPath: home + "/mac-remote-mcp/dist/index.js") {
-                installDir = home + "/mac-remote-mcp"
-            } else {
-                installDir = bundleResources
-            }
+            installDir = bundleResources
         }
 
-        // Log directory
-        let home = NSHomeDirectory()
-        logDir = home + "/.mac-remote-mcp/logs"
+        // Config & Log directories (always writable)
+        configDir = home + "/.mac-remote-mcp"
+        logDir = configDir + "/logs"
         try? FileManager.default.createDirectory(atPath: logDir, withIntermediateDirectories: true)
 
-        // Load .env file
-        let envPath = installDir + "/.env"
+        // Load .env from ~/.mac-remote-mcp/.env (writable location)
+        let envPath = configDir + "/.env"
         var envVars: [String: String] = [:]
         if let contents = try? String(contentsOfFile: envPath, encoding: .utf8) {
             for line in contents.components(separatedBy: .newlines) {
@@ -55,24 +53,66 @@ class Config {
             }
         }
 
-        apiKey = envVars["MCP_API_KEY"] ?? Config.generateApiKey()
+        // API Key: load from .env or generate + persist
+        if let existingKey = envVars["MCP_API_KEY"], !existingKey.isEmpty {
+            apiKey = existingKey
+        } else {
+            let newKey = Config.generateApiKey()
+            apiKey = newKey
+            envVars["MCP_API_KEY"] = newKey
+            Config.saveEnv(envVars, to: envPath)
+        }
+
         serverPort = Int(envVars["PORT"] ?? "3000") ?? 3000
         playwrightPort = Int(envVars["PLAYWRIGHT_PORT"] ?? "3001") ?? 3001
         proxyPort = Int(envVars["PROXY_PORT"] ?? "3002") ?? 3002
         autoStart = (envVars["AUTO_START"] ?? "false").lowercased() == "true"
 
-        // Find node/npx in common locations
+        // Find node/npx
         let searchPaths = [
             "/opt/homebrew/bin",
             "/usr/local/bin",
             "/usr/bin",
-            home + "/.nvm/versions/node/v22.0.0/bin",  // Common NVM path
+            home + "/.nvm/versions/node/v22.0.0/bin",
         ]
 
         nodePath = Config.findExecutable("node", in: searchPaths) ?? "/usr/local/bin/node"
         npxPath = Config.findExecutable("npx", in: searchPaths) ?? "/usr/local/bin/npx"
         pathEnv = searchPaths.joined(separator: ":") + ":/usr/bin:/bin:/usr/sbin:/sbin"
     }
+
+    // MARK: - Save .env
+
+    private static func saveEnv(_ vars: [String: String], to path: String) {
+        var lines = [
+            "# mac-remote-mcp configuration",
+            "# Auto-generated on first launch",
+            ""
+        ]
+        let orderedKeys = ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START"]
+        let defaults: [String: String] = [
+            "PORT": "3000",
+            "PLAYWRIGHT_PORT": "3001",
+            "PROXY_PORT": "3002",
+            "AUTO_START": "false",
+        ]
+
+        for key in orderedKeys {
+            let value = vars[key] ?? defaults[key] ?? ""
+            if !value.isEmpty {
+                lines.append("\(key)=\(value)")
+            }
+        }
+        // Add any extra keys
+        for (key, value) in vars where !orderedKeys.contains(key) {
+            lines.append("\(key)=\(value)")
+        }
+        lines.append("")
+        let content = lines.joined(separator: "\n")
+        try? content.write(toFile: path, atomically: true, encoding: .utf8)
+    }
+
+    // MARK: - Helpers
 
     private static func findExecutable(_ name: String, in paths: [String]) -> String? {
         for dir in paths {
@@ -81,7 +121,6 @@ class Config {
                 return path
             }
         }
-        // Try `which`
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/which")
         task.arguments = [name]
@@ -95,7 +134,6 @@ class Config {
     }
 
     private static func generateApiKey() -> String {
-        // Generate a random hex key
         var bytes = [UInt8](repeating: 0, count: 32)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         return bytes.map { String(format: "%02x", $0) }.joined()
