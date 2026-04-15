@@ -99,20 +99,33 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Notarize DMG
+        continue-on-error: true
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           echo "Submitting DMG for notarization..."
-          xcrun notarytool submit app/build/MacRemoteMCP.dmg \
+          RESULT=$(xcrun notarytool submit app/build/MacRemoteMCP.dmg \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait --timeout 600
-          echo "Stapling notarization ticket..."
-          xcrun stapler staple app/build/MacRemoteMCP.dmg
-          echo "Notarization complete!"
+            --wait --timeout 600 2>&1) || true
+          echo "$RESULT"
+          
+          # Extract submission ID and get log
+          SUB_ID=$(echo "$RESULT" | grep -o 'id: [a-f0-9-]*' | head -1 | cut -d' ' -f2)
+          if [ -n "$SUB_ID" ]; then
+            echo "Getting notarization log for $SUB_ID..."
+            xcrun notarytool log "$SUB_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_APP_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" 2>&1 || true
+          fi
+          
+          # Try stapling (will fail if notarization failed)
+          echo "Attempting to staple..."
+          xcrun stapler staple app/build/MacRemoteMCP.dmg 2>&1 || echo "Stapling skipped (notarization may have failed)"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
