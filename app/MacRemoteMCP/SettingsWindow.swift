@@ -320,7 +320,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         // Save to .env
         let envPath = Config.shared.configDir + "/.env"
         var lines = ["# mac-remote-mcp configuration", ""]
-        for key in ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START", "CLOUDFLARE_TUNNEL_TOKEN"] {
+        for key in ["MCP_API_KEY", "PORT", "PLAYWRIGHT_PORT", "PROXY_PORT", "AUTO_START", "CLOUDFLARE_TUNNEL_TOKEN", "TUNNEL_HOSTNAME"] {
             if let val = envVars[key] {
                 lines.append("\(key)=\(val)")
             }

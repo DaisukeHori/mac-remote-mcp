@@ -64,13 +64,18 @@ class TunnelSetupWizard {
         }
 
         // Success!
-        // Save token to .env
+        // Save token and hostname to .env
         let envPath = Config.shared.configDir + "/.env"
         if var contents = try? String(contentsOfFile: envPath, encoding: .utf8) {
             if let range = contents.range(of: "CLOUDFLARE_TUNNEL_TOKEN=.*", options: .regularExpression) {
                 contents.replaceSubrange(range, with: "CLOUDFLARE_TUNNEL_TOKEN=\(token)")
             } else {
                 contents += "CLOUDFLARE_TUNNEL_TOKEN=\(token)\n"
+            }
+            if let range = contents.range(of: "TUNNEL_HOSTNAME=.*", options: .regularExpression) {
+                contents.replaceSubrange(range, with: "TUNNEL_HOSTNAME=\(hostname)")
+            } else {
+                contents += "TUNNEL_HOSTNAME=\(hostname)\n"
             }
             try? contents.write(toFile: envPath, atomically: true, encoding: .utf8)
         }

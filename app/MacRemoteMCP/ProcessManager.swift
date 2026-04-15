@@ -180,6 +180,16 @@ class ProcessManager {
         if !config.tunnelToken.isEmpty {
             process.arguments = ["tunnel", "run", "--token", config.tunnelToken]
             log("固定トンネル起動中（トークン使用）...")
+
+            // For named tunnels, set the URL from config
+            if !config.tunnelHostname.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                    let url = "https://\(config.tunnelHostname)"
+                    self?.tunnelURL = url
+                    self?.log("トンネルURL（固定）: \(url)")
+                    NotificationCenter.default.post(name: .tunnelURLChanged, object: url)
+                }
+            }
         } else {
             process.arguments = ["tunnel", "--url", "http://127.0.0.1:\(config.serverPort)"]
         }
@@ -250,28 +260,42 @@ class ProcessManager {
     }
 
     private func waitForServerAndStartTunnel(attempts: Int = 0) {
-        guard attempts < 20 else {
-            log("サーバー起動待ちタイムアウト — トンネルを強制起動")
-            DispatchQueue.main.async { [weak self] in
-                self?.startQuickTunnel()
-            }
+        guard attempts < 30 else {
+            log("サーバー起動待ちタイムアウト（15秒）— トンネルを強制起動")
+            startQuickTunnel()
             return
         }
 
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            // Check if server is responding
-            let url = URL(string: "http://127.0.0.1:\(Config.shared.serverPort)/health")!
-            let task = URLSession.shared.dataTask(with: url) { data, response, error in
-                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+            guard let self = self else { return }
+
+            // Use curl to check health (more reliable than URLSession in menu bar apps)
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
+            task.arguments = ["-s", "-o", "/dev/null", "-w", "%{http_code}",
+                              "--connect-timeout", "1",
+                              "http://127.0.0.1:\(Config.shared.serverPort)/health"]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            task.standardError = Pipe()
+
+            do {
+                try task.run()
+                task.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let code = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                if code == "200" {
                     DispatchQueue.main.async {
-                        self?.log("MCPサーバー応答確認 — トンネル起動")
-                        self?.startQuickTunnel()
+                        self.log("MCPサーバー応答確認 — トンネル起動")
+                        self.startQuickTunnel()
                     }
                 } else {
-                    self?.waitForServerAndStartTunnel(attempts: attempts + 1)
+                    self.waitForServerAndStartTunnel(attempts: attempts + 1)
                 }
+            } catch {
+                self.waitForServerAndStartTunnel(attempts: attempts + 1)
             }
-            task.resume()
         }
     }
 
