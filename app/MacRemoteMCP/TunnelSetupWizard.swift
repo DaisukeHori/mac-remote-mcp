@@ -74,13 +74,15 @@ class TunnelSetupWizard {
         Cloudflareの管理画面からAPIトークンを作成してください。
 
         1. 下の「トークンを作成」をクリック
-        2.「カスタムトークンを作成」を選択
-        3. 権限：
-           ・Account / Cloudflare Tunnel / Edit
-           ・Account / Account Settings / Read
-           ・Zone / DNS / Edit
-           ・Zone / Zone / Read
-        4. 作成されたトークンをここに貼り付け
+        2.「カスタムトークンを作成する」の「始める」を選択
+        3. トークン名: mac-remote-mcp（何でもOK）
+        4. 権限を以下の4つ追加：
+           ・アカウント ／ Cloudflare Tunnel ／ 編集
+           ・アカウント ／ アカウント設定 ／ 読み取り
+           ・ゾーン ／ DNS ／ 編集
+           ・ゾーン ／ ゾーン ／ 読み取り
+        5.「概要に進む」→「トークンを作成」
+        6. 表示されたトークンをここに貼り付け
         """
         alert.addButton(withTitle: "次へ")
         alert.addButton(withTitle: "トークンを作成（ブラウザ）")
