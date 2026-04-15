@@ -19,9 +19,14 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         w.center()
         w.delegate = self
         w.isReleasedWhenClosed = false
+        w.level = .floating
         w.contentView = buildContent()
         w.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        // Reset level after activation so it doesn't stay always-on-top
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            w.level = .normal
+        }
         window = w
     }
 
