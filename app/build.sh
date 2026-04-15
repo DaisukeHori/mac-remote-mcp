@@ -132,15 +132,20 @@ fi
 # ── 6. Create DMG ────────────────────────────────────────────
 echo "  Creating DMG installer..."
 mkdir -p "$DMG_DIR"
-cp -r "$APP_BUNDLE" "$DMG_DIR/"
+# Use ditto instead of cp -r to preserve code signatures and extended attributes
+ditto "$APP_BUNDLE" "$DMG_DIR/MacRemoteMCP.app"
 ln -s /Applications "$DMG_DIR/Applications"
+
+# Verify signature before DMG creation
+echo "  Verifying signature before DMG..."
+codesign --verify --deep --strict "$DMG_DIR/MacRemoteMCP.app" 2>&1
 
 hdiutil create -volname "MacRemoteMCP" -srcfolder "$DMG_DIR" \
   -ov -format UDZO "$BUILD_DIR/MacRemoteMCP.dmg"
 rm -rf "$DMG_DIR"
 
-# Also zip for GitHub
-cd "$BUILD_DIR" && zip -qr "MacRemoteMCP-macOS.zip" MacRemoteMCP.app
+# Also zip for GitHub (ditto preserves signatures in zip too)
+cd "$BUILD_DIR" && ditto -c -k --keepParent MacRemoteMCP.app "MacRemoteMCP-macOS.zip"
 
 echo ""
 echo "✅ Build complete!"
