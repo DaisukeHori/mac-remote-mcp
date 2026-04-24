@@ -1,0 +1,21 @@
+name: Self-hosted Runner疎通テスト(multi-runners経由)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, managed-by-mr]
+    steps:
+      - name: Runner情報表示
+        run: |
+          echo "=== Runner identity ==="
+          hostname
+          whoami
+          echo "workspace: $PWD"
+          echo "runner labels: $RUNNER_LABELS"
+      - name: Docker & network check
+        run: |
+          docker version --format '{{.Server.Version}}'
+          ip -4 addr show eth0 | grep inet
+          curl -sS -o /dev/null -w "github.com -> %{http_code}\n" https://api.github.com
