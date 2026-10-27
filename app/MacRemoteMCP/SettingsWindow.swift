@@ -15,7 +15,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered, defer: false
         )
-        w.title = "MacRemoteMCP 設定"
+        w.title = L("settings.window.title")
         w.center()
         w.delegate = self
         w.isReleasedWhenClosed = false
@@ -36,13 +36,13 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         var y = 580
 
         // ── Title ──
-        let title = makeLabel("MacRemoteMCP 設定", size: 18, bold: true)
+        let title = makeLabel(L("settings.window.title"), size: 18, bold: true)
         title.frame = NSRect(x: 20, y: y, width: 480, height: 28)
         container.addSubview(title)
         y -= 40
 
         // ── API Key ──
-        let apiLabel = makeLabel("APIキー", size: 13, bold: true)
+        let apiLabel = makeLabel(L("settings.apikey.label"), size: 13, bold: true)
         apiLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
         container.addSubview(apiLabel)
         y -= 28
@@ -56,7 +56,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         self.apiField = apiFieldLocal
 
         let copyBtn = NSButton(frame: NSRect(x: 365, y: y, width: 65, height: 24))
-        copyBtn.title = "コピー"
+        copyBtn.title = L("settings.button.copy")
         copyBtn.bezelStyle = .rounded
         copyBtn.font = NSFont.systemFont(ofSize: 11)
         copyBtn.target = self
@@ -64,7 +64,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         container.addSubview(copyBtn)
 
         let rotateBtn = NSButton(frame: NSRect(x: 435, y: y, width: 65, height: 24))
-        rotateBtn.title = "再生成"
+        rotateBtn.title = L("settings.button.regenerate")
         rotateBtn.bezelStyle = .rounded
         rotateBtn.font = NSFont.systemFont(ofSize: 11)
         rotateBtn.target = self
@@ -73,12 +73,12 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         y -= 36
 
         // ── Ports ──
-        let portsLabel = makeLabel("ポート設定", size: 13, bold: true)
+        let portsLabel = makeLabel(L("settings.ports.label"), size: 13, bold: true)
         portsLabel.frame = NSRect(x: 20, y: y, width: 200, height: 20)
         container.addSubview(portsLabel)
         y -= 28
 
-        let portLabels = ["MCPサーバー", "Playwright", "認証プロキシ"]
+        let portLabels = [L("settings.port.server"), L("settings.port.playwright"), L("settings.port.authproxy")]
         let portValues = [Config.shared.serverPort, Config.shared.playwrightPort, Config.shared.proxyPort]
         let portKeys = ["PORT", "PLAYWRIGHT_PORT", "PROXY_PORT"]
 
@@ -102,7 +102,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         y -= 8
 
         // ── Auto Start ──
-        let autoCheck = NSButton(checkboxWithTitle: "アプリ起動時に全サービスを自動開始", target: nil, action: nil)
+        let autoCheck = NSButton(checkboxWithTitle: L("settings.autostart.checkbox"), target: nil, action: nil)
         autoCheck.frame = NSRect(x: 20, y: y, width: 300, height: 20)
         autoCheck.state = Config.shared.autoStart ? .on : .off
         autoCheck.tag = 300
@@ -110,12 +110,12 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         y -= 36
 
         // ── Cloudflare Tunnel ──
-        let cfLabel = makeLabel("Cloudflare Tunnel（固定URL）", size: 13, bold: true)
+        let cfLabel = makeLabel(L("settings.cloudflare.label"), size: 13, bold: true)
         cfLabel.frame = NSRect(x: 20, y: y, width: 300, height: 20)
         container.addSubview(cfLabel)
         y -= 24
 
-        let cfDesc = makeLabel("空欄＝無料Quick Tunnel（ランダムURL）。トークン入力で固定URL。", size: 10, bold: false)
+        let cfDesc = makeLabel(L("settings.cloudflare.desc"), size: 10, bold: false)
         cfDesc.textColor = .secondaryLabelColor
         cfDesc.frame = NSRect(x: 20, y: y, width: 480, height: 16)
         container.addSubview(cfDesc)
@@ -127,27 +127,27 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
         let cfTokenField = NSTextField(frame: NSRect(x: 150, y: y, width: 350, height: 22))
         cfTokenField.stringValue = Config.shared.tunnelToken
-        cfTokenField.placeholderString = "自動設定されます（手動入力も可）"
+        cfTokenField.placeholderString = L("settings.cloudflare.token.placeholder")
         cfTokenField.font = NSFont.monospacedSystemFont(ofSize: 10, weight: .regular)
         cfTokenField.tag = 400
         container.addSubview(cfTokenField)
         y -= 30
 
         let setupBtn = NSButton(frame: NSRect(x: 40, y: y, width: 220, height: 28))
-        setupBtn.title = "固定URLをセットアップ..."
+        setupBtn.title = L("settings.cloudflare.setup.button")
         setupBtn.bezelStyle = .rounded
         setupBtn.target = self
         setupBtn.action = #selector(runTunnelSetup)
         container.addSubview(setupBtn)
 
-        let helpLabel = makeLabel("Cloudflareアカウントがあればボタン1つで完了", size: 10, bold: false)
+        let helpLabel = makeLabel(L("settings.cloudflare.help"), size: 10, bold: false)
         helpLabel.textColor = .secondaryLabelColor
         helpLabel.frame = NSRect(x: 270, y: y + 4, width: 230, height: 16)
         container.addSubview(helpLabel)
         y -= 36
 
         // ── Permission Status ──
-        let permLabel = makeLabel("権限の状態", size: 13, bold: true)
+        let permLabel = makeLabel(L("settings.permissions.label"), size: 13, bold: true)
         permLabel.frame = NSRect(x: 20, y: y, width: 200, height: 20)
         container.addSubview(permLabel)
         y -= 26
@@ -156,11 +156,11 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         let scrStatus = PermissionChecker.checkScreenRecording()
 
         let perms = [
-            ("アクセシビリティ", accStatus),
-            ("画面収録", scrStatus),
+            (L("permission.accessibility"), accStatus, true),
+            (L("permission.screenrecording"), scrStatus, false),
         ]
 
-        for (name, granted) in perms {
+        for (name, granted, isAccessibility) in perms {
             let icon = granted ? "✅" : "❌"
             let status = makeLabel("\(icon) \(name)", size: 12, bold: false)
             status.frame = NSRect(x: 40, y: y, width: 200, height: 18)
@@ -168,11 +168,11 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
             if !granted {
                 let fixBtn = NSButton(frame: NSRect(x: 250, y: y - 2, width: 100, height: 22))
-                fixBtn.title = "設定を開く"
+                fixBtn.title = L("permission.button.opensettings")
                 fixBtn.bezelStyle = .rounded
                 fixBtn.font = NSFont.systemFont(ofSize: 11)
                 fixBtn.target = self
-                if name == "アクセシビリティ" {
+                if isAccessibility {
                     fixBtn.action = #selector(openAccessibility)
                 } else {
                     fixBtn.action = #selector(openScreenRecording)
@@ -185,7 +185,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
 
         // ── Buttons ──
         let saveBtn = NSButton(frame: NSRect(x: 310, y: 16, width: 90, height: 32))
-        saveBtn.title = "保存"
+        saveBtn.title = L("settings.button.save")
         saveBtn.bezelStyle = .rounded
         saveBtn.keyEquivalent = "\r"
         saveBtn.target = self
@@ -193,7 +193,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         container.addSubview(saveBtn)
 
         let cancelBtn = NSButton(frame: NSRect(x: 410, y: 16, width: 90, height: 32))
-        cancelBtn.title = "閉じる"
+        cancelBtn.title = L("settings.button.close")
         cancelBtn.bezelStyle = .rounded
         cancelBtn.keyEquivalent = "\u{1b}"
         cancelBtn.target = self
@@ -201,7 +201,7 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         container.addSubview(cancelBtn)
 
         let envBtn = NSButton(frame: NSRect(x: 20, y: 16, width: 160, height: 32))
-        envBtn.title = ".envファイルを直接編集"
+        envBtn.title = L("settings.button.editenv")
         envBtn.bezelStyle = .rounded
         envBtn.font = NSFont.systemFont(ofSize: 11)
         envBtn.target = self
@@ -229,10 +229,10 @@ class SettingsWindow: NSObject, NSWindowDelegate {
     @objc private func rotateApiKey() {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "APIキーを再生成しますか？"
-        alert.informativeText = "現在のキーは無効になります。\nClaude.aiのコネクター設定も更新が必要です。"
-        alert.addButton(withTitle: "再生成")
-        alert.addButton(withTitle: "キャンセル")
+        alert.messageText = L("settings.rotate.confirm.title")
+        alert.informativeText = L("settings.rotate.confirm.body")
+        alert.addButton(withTitle: L("settings.button.regenerate"))
+        alert.addButton(withTitle: L("common.cancel"))
         let response = alert.runModal()
         guard response == .alertFirstButtonReturn else { return }
 
@@ -260,8 +260,8 @@ class SettingsWindow: NSObject, NSWindowDelegate {
         NSPasteboard.general.setString(newKey, forType: .string)
 
         let doneAlert = NSAlert()
-        doneAlert.messageText = "APIキーを再生成しました"
-        doneAlert.informativeText = "新しいキーがクリップボードにコピーされました。\nアプリを再起動すると新しいキーが適用されます。"
+        doneAlert.messageText = L("settings.rotate.done.title")
+        doneAlert.informativeText = L("settings.rotate.done.body")
         doneAlert.runModal()
     }
 

@@ -45,85 +45,85 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         processManager.stopAll()
     }
 
-    // MARK: - メニュー構築
+    // MARK: - Menu construction
 
     private func buildMenu() {
         let menu = NSMenu()
 
-        // ステータス
-        statusMenuItem = NSMenuItem(title: "状態：停止中", action: nil, keyEquivalent: "")
+        // Status
+        statusMenuItem = NSMenuItem(title: L("menu.status.initial"), action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
         menu.addItem(statusMenuItem)
 
-        // APIキー
-        apiKeyMenuItem = NSMenuItem(title: "APIキー：読込中...", action: #selector(copyApiKey), keyEquivalent: "k")
+        // API key
+        apiKeyMenuItem = NSMenuItem(title: L("menu.apikey.loading"), action: #selector(copyApiKey), keyEquivalent: "k")
         menu.addItem(apiKeyMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // MCPサーバー
-        toggleServerMenuItem = NSMenuItem(title: "▶ MCPサーバーを起動", action: #selector(toggleServer), keyEquivalent: "s")
+        // MCP server
+        toggleServerMenuItem = NSMenuItem(title: L("menu.server.start"), action: #selector(toggleServer), keyEquivalent: "s")
         menu.addItem(toggleServerMenuItem)
 
         // Playwright
-        togglePlaywrightMenuItem = NSMenuItem(title: "▶ Playwrightを起動", action: #selector(togglePlaywright), keyEquivalent: "p")
+        togglePlaywrightMenuItem = NSMenuItem(title: L("menu.playwright.start"), action: #selector(togglePlaywright), keyEquivalent: "p")
         menu.addItem(togglePlaywrightMenuItem)
 
-        // スリープ防止
-        toggleCaffeinateMenuItem = NSMenuItem(title: "▶ スリープ防止を開始", action: #selector(toggleCaffeinate), keyEquivalent: "c")
+        // Sleep prevention
+        toggleCaffeinateMenuItem = NSMenuItem(title: L("menu.caffeinate.start"), action: #selector(toggleCaffeinate), keyEquivalent: "c")
         menu.addItem(toggleCaffeinateMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // トンネル
-        tunnelMenuItem = NSMenuItem(title: "🌐 トンネル：未接続", action: nil, keyEquivalent: "")
+        // Tunnel
+        tunnelMenuItem = NSMenuItem(title: L("menu.tunnel.disconnected"), action: nil, keyEquivalent: "")
         tunnelMenuItem.isEnabled = false
         menu.addItem(tunnelMenuItem)
 
-        toggleTunnelMenuItem = NSMenuItem(title: "▶ クイックトンネル開始（無料）", action: #selector(toggleTunnel), keyEquivalent: "t")
+        toggleTunnelMenuItem = NSMenuItem(title: L("menu.tunnel.quickstart"), action: #selector(toggleTunnel), keyEquivalent: "t")
         menu.addItem(toggleTunnelMenuItem)
 
-        let copyURLItem = NSMenuItem(title: "MCP URLをコピー", action: #selector(copyTunnelURL), keyEquivalent: "u")
+        let copyURLItem = NSMenuItem(title: L("menu.tunnel.copyurl"), action: #selector(copyTunnelURL), keyEquivalent: "u")
         menu.addItem(copyURLItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // 全体操作
-        let startAllItem = NSMenuItem(title: "すべて起動", action: #selector(startAll), keyEquivalent: "r")
+        // Global actions
+        let startAllItem = NSMenuItem(title: L("menu.startall"), action: #selector(startAll), keyEquivalent: "r")
         menu.addItem(startAllItem)
 
-        let stopAllItem = NSMenuItem(title: "すべて停止", action: #selector(stopAll), keyEquivalent: "x")
+        let stopAllItem = NSMenuItem(title: L("menu.stopall"), action: #selector(stopAll), keyEquivalent: "x")
         menu.addItem(stopAllItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // ログ・設定・権限
-        let logsItem = NSMenuItem(title: "ログを開く...", action: #selector(openLogs), keyEquivalent: "l")
+        // Logs / settings / permissions
+        let logsItem = NSMenuItem(title: L("menu.logs.open"), action: #selector(openLogs), keyEquivalent: "l")
         menu.addItem(logsItem)
 
-        let configItem = NSMenuItem(title: "設定を編集...", action: #selector(openConfig), keyEquivalent: ",")
+        let configItem = NSMenuItem(title: L("menu.settings.edit"), action: #selector(openConfig), keyEquivalent: ",")
         menu.addItem(configItem)
 
-        let permItem = NSMenuItem(title: "権限を設定...", action: #selector(setupPermissions), keyEquivalent: "")
+        let permItem = NSMenuItem(title: L("menu.permissions.setup"), action: #selector(setupPermissions), keyEquivalent: "")
         menu.addItem(permItem)
 
-        let profileItem = NSMenuItem(title: "構成プロファイルをインストール...", action: #selector(installProfile), keyEquivalent: "")
+        let profileItem = NSMenuItem(title: L("menu.profile.install"), action: #selector(installProfile), keyEquivalent: "")
         menu.addItem(profileItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // 終了
-        let quitItem = NSMenuItem(title: "MacRemoteMCPを終了", action: #selector(quit), keyEquivalent: "q")
+        // Quit
+        let quitItem = NSMenuItem(title: L("menu.quit"), action: #selector(quit), keyEquivalent: "q")
         menu.addItem(quitItem)
 
         statusItem.menu = menu
 
-        apiKeyMenuItem.title = "APIキー：\(Config.shared.apiKey.prefix(8))...（クリックでコピー）"
+        apiKeyMenuItem.title = L("menu.apikey.format", String(Config.shared.apiKey.prefix(8)))
 
         updateMenuState()
     }
 
-    // MARK: - メニュー状態更新
+    // MARK: - Menu state updates
 
     private func updateMenuState() {
         let serverRunning = processManager.isServerRunning
@@ -132,34 +132,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let tunnelRunning = processManager.isTunnelRunning
         let tunnelURL = processManager.tunnelURL
 
-        toggleServerMenuItem.title = serverRunning ? "⏹ MCPサーバーを停止" : "▶ MCPサーバーを起動"
-        togglePlaywrightMenuItem.title = playwrightRunning ? "⏹ Playwrightを停止" : "▶ Playwrightを起動"
-        toggleCaffeinateMenuItem.title = caffeinateRunning ? "⏹ スリープ防止を解除" : "▶ スリープ防止を開始"
-        toggleTunnelMenuItem.title = tunnelRunning ? "⏹ トンネルを停止" : (Config.shared.tunnelToken.isEmpty ? "▶ クイックトンネル開始（無料）" : "▶ 固定トンネル開始")
+        toggleServerMenuItem.title = serverRunning ? L("menu.server.stop") : L("menu.server.start")
+        togglePlaywrightMenuItem.title = playwrightRunning ? L("menu.playwright.stop") : L("menu.playwright.start")
+        toggleCaffeinateMenuItem.title = caffeinateRunning ? L("menu.caffeinate.stop") : L("menu.caffeinate.start")
+        toggleTunnelMenuItem.title = tunnelRunning ? L("menu.tunnel.stop") : (Config.shared.tunnelToken.isEmpty ? L("menu.tunnel.quickstart") : L("menu.tunnel.fixed.start"))
 
         if let url = tunnelURL {
             tunnelMenuItem.title = "🌐 \(TunnelURLParser.displayURL(url))"
         } else if tunnelRunning {
-            tunnelMenuItem.title = "🌐 トンネル：接続中..."
+            tunnelMenuItem.title = L("menu.tunnel.connecting")
         } else {
-            tunnelMenuItem.title = "🌐 トンネル：未接続"
+            tunnelMenuItem.title = L("menu.tunnel.disconnected")
         }
 
         let allRunning = serverRunning && playwrightRunning
         if allRunning {
-            statusMenuItem.title = tunnelURL != nil ? "● 稼働中 — オンライン公開中" : "● 稼働中（ローカルのみ）"
-            statusItem.button?.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: "稼働中")
+            statusMenuItem.title = tunnelURL != nil ? L("menu.status.running.online") : L("menu.status.running.local")
+            statusItem.button?.image = NSImage(systemSymbolName: "server.rack", accessibilityDescription: L("a11y.status.running"))
         } else if serverRunning || playwrightRunning {
-            statusMenuItem.title = "◐ 一部稼働中"
-            statusItem.button?.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: "一部")
+            statusMenuItem.title = L("menu.status.partial")
+            statusItem.button?.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: L("a11y.status.partial"))
         } else {
-            statusMenuItem.title = "○ 停止中"
-            statusItem.button?.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: "停止")
+            statusMenuItem.title = L("menu.status.idle")
+            statusItem.button?.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: L("a11y.status.stopped"))
         }
         statusItem.button?.image?.isTemplate = true
     }
 
-    // MARK: - アクション
+    // MARK: - Actions
 
     @objc private func toggleServer() {
         if processManager.isServerRunning { processManager.stopServer() }
@@ -193,7 +193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(Config.shared.apiKey, forType: .string)
         let original = apiKeyMenuItem.title
-        apiKeyMenuItem.title = "✓ クリップボードにコピーしました"
+        apiKeyMenuItem.title = L("menu.apikey.copied")
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             self?.apiKeyMenuItem.title = original
         }
@@ -207,14 +207,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func copyTunnelURL() {
         guard let url = processManager.tunnelURL else {
-            tunnelMenuItem.title = "🌐 トンネル未稼働"
+            tunnelMenuItem.title = L("menu.tunnel.notrunning")
             return
         }
         let mcpURL = TunnelURLParser.mcpEndpoint(tunnelURL: url)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(mcpURL, forType: .string)
         let original = tunnelMenuItem.title
-        tunnelMenuItem.title = "✓ コピー完了：\(TunnelURLParser.displayURL(mcpURL))"
+        tunnelMenuItem.title = L("menu.tunnel.copied.format", TunnelURLParser.displayURL(mcpURL))
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.tunnelMenuItem.title = original
         }

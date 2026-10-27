@@ -1,0 +1,132 @@
+/* MacRemoteMCP — English localization */
+
+/* ── Menu Bar: AppDelegate ─────────────────────────────── */
+"menu.status.initial" = "Status: Stopped";
+"menu.apikey.loading" = "API Key: Loading...";
+"menu.apikey.format" = "API Key: %@... (click to copy)";
+"menu.apikey.copied" = "✓ Copied to Clipboard";
+"menu.server.start" = "▶ Start MCP Server";
+"menu.server.stop" = "⏹ Stop MCP Server";
+"menu.playwright.start" = "▶ Start Playwright";
+"menu.playwright.stop" = "⏹ Stop Playwright";
+"menu.caffeinate.start" = "▶ Start Sleep Prevention";
+"menu.caffeinate.stop" = "⏹ Stop Sleep Prevention";
+"menu.tunnel.disconnected" = "🌐 Tunnel: Disconnected";
+"menu.tunnel.connecting" = "🌐 Tunnel: Connecting...";
+"menu.tunnel.notrunning" = "🌐 Tunnel Not Running";
+"menu.tunnel.copied.format" = "✓ Copied: %@";
+"menu.tunnel.quickstart" = "▶ Start Quick Tunnel (Free)";
+"menu.tunnel.fixed.start" = "▶ Start Fixed Tunnel";
+"menu.tunnel.stop" = "⏹ Stop Tunnel";
+"menu.tunnel.copyurl" = "Copy MCP URL";
+"menu.startall" = "Start All";
+"menu.stopall" = "Stop All";
+"menu.logs.open" = "Open Logs...";
+"menu.settings.edit" = "Edit Settings...";
+"menu.permissions.setup" = "Set Up Permissions...";
+"menu.profile.install" = "Install Configuration Profile...";
+"menu.quit" = "Quit MacRemoteMCP";
+"menu.status.running.online" = "● Running — Published Online";
+"menu.status.running.local" = "● Running (Local Only)";
+"menu.status.partial" = "◐ Partially Running";
+"menu.status.idle" = "○ Stopped";
+"a11y.status.running" = "Running";
+"a11y.status.partial" = "Partial";
+"a11y.status.stopped" = "Stopped";
+
+/* ── ProcessManager (app.log / NSLog) ─────────────────────── */
+"log.server.started.format" = "MCP server started (PID: %d)";
+"log.server.start_failed.format" = "MCP server failed to start: %@";
+"log.server.stopped" = "MCP server stopped";
+"log.playwright.started.format" = "Playwright started (PID: %d)";
+"log.playwright.start_failed.format" = "Playwright failed to start: %@";
+"log.playwright_proxy.started.format" = "Playwright proxy started (PID: %d)";
+"log.playwright_proxy.start_failed.format" = "Playwright failed to start (Proxy): %@";
+"log.playwright.stopped" = "Playwright stopped";
+"log.caffeinate.started.format" = "Sleep prevention started (PID: %d)";
+"log.caffeinate.start_failed.format" = "Sleep prevention failed to start: %@";
+"log.caffeinate.stopped" = "Sleep prevention stopped";
+"log.cloudflared.notfound" = "cloudflared not found. Install: brew install cloudflared";
+"log.tunnel.fixed.starting" = "Starting fixed tunnel (using token)...";
+"log.tunnel.url.fixed.format" = "Tunnel URL (fixed): %@";
+"log.tunnel.url.format" = "Tunnel URL: %@";
+"log.tunnel.quick.starting.format" = "Starting quick tunnel (PID: %d)...";
+"log.tunnel.fixed.starting.format" = "Starting fixed tunnel (PID: %d)...";
+"log.tunnel.quick.failed.format" = "Quick tunnel failed to start: %@";
+"log.tunnel.stopped" = "Tunnel stopped";
+"log.server.wait_timeout" = "Timed out waiting for server (15s) — forcing tunnel start";
+"log.server.health_confirmed" = "MCP server health confirmed — starting tunnel";
+
+/* ── PermissionChecker ─────────────────────────────────── */
+"permission.accessibility" = "Accessibility";
+"permission.screenrecording" = "Screen Recording";
+"permission.alert.title" = "Permission Setup Required";
+"permission.alert.item.format" = "• %@ ❌";
+"permission.alert.body.format" = "MacRemoteMCP needs the following permissions to work:\n\n%@\n\nClicking \"Open Settings\" will open\nthe required settings screens in order.\nTurn on MacRemoteMCP or node in each screen.";
+"permission.button.opensettings" = "Open Settings";
+"permission.button.later" = "Set Up Later";
+"permission.profile.panel.title" = "Select Configuration Profile";
+"permission.profile.panel.message" = "Please select MacRemoteMCP-Permissions.mobileconfig";
+
+/* ── SettingsWindow ─────────────────────────────────────── */
+"settings.window.title" = "MacRemoteMCP Settings";
+"settings.apikey.label" = "API Key";
+"settings.button.copy" = "Copy";
+"settings.button.regenerate" = "Regenerate";
+"settings.ports.label" = "Port Settings";
+"settings.port.server" = "MCP Server";
+"settings.port.playwright" = "Playwright";
+"settings.port.authproxy" = "Auth Proxy";
+"settings.autostart.checkbox" = "Automatically start all services on app launch";
+"settings.cloudflare.label" = "Cloudflare Tunnel (Fixed URL)";
+"settings.cloudflare.desc" = "Leave blank = free Quick Tunnel (random URL). Enter a token for a fixed URL.";
+"settings.cloudflare.token.placeholder" = "Set automatically (manual entry also possible)";
+"settings.cloudflare.setup.button" = "Set Up Fixed URL...";
+"settings.cloudflare.help" = "One click if you have a Cloudflare account";
+"settings.permissions.label" = "Permission Status";
+"settings.button.save" = "Save";
+"settings.button.close" = "Close";
+"settings.button.editenv" = "Edit .env File Directly";
+"settings.rotate.confirm.title" = "Regenerate API Key?";
+"settings.rotate.confirm.body" = "The current key will become invalid.\nYou'll also need to update the connector settings in Claude.ai.";
+"settings.rotate.done.title" = "API Key Regenerated";
+"settings.rotate.done.body" = "The new key has been copied to the clipboard.\nRestart the app to apply the new key.";
+
+/* ── TunnelSetupWizard ──────────────────────────────────── */
+"wizard.error.zones_fetch_failed" = "Failed to retrieve domain list.";
+"wizard.error.accountid_failed" = "Failed to retrieve account ID.";
+"wizard.error.tunnel_create_failed" = "Failed to create tunnel.";
+"wizard.error.dns_failed" = "Failed to configure DNS.";
+"wizard.error.tunnel_config_partial" = "Tunnel configuration partially failed, but the token was retrieved.";
+"wizard.error.token_failed" = "Failed to retrieve tunnel token.";
+"wizard.success.title" = "Fixed URL setup complete!";
+"wizard.success.body.format" = "URL: https://%@\nMCP: https://%@/mcp\n\nClick \"Restart\" to launch with the new settings.";
+"wizard.button.restart" = "Restart";
+"wizard.step1.title" = "Step 1: Create a Cloudflare API Token";
+"wizard.step1.body" = "If you don't have a token yet:\n━━━━━━━━━━━━━━━━━━━━━━\n① Click \"Open Cloudflare\" below\n② Click the \"Get started\" button next to\n    \"Create Custom Token\"\n③ Enter any name for the token\n    (e.g., MAC-MCP)\n④ Add these 4 rows under \"Permissions\":\n    Account / Cloudflare Tunnel / Edit\n    Account / Account Settings / Read\n    Zone / DNS / Edit\n    Zone / Zone / Read\n⑤ Click \"Continue to summary\" below\n⑥ Click \"Create Token\"\n⑦ Copy the displayed cfut_xxxxx... value\n━━━━━━━━━━━━━━━━━━━━━━\nPaste the copied token below.";
+"wizard.button.next" = "Next";
+"wizard.button.opencloudflare" = "Open Cloudflare";
+"wizard.token.placeholder" = "Paste your token here (starts with cfut_)";
+"wizard.error.token_empty" = "No token was entered.\nClicking \"Create Token\" on the Cloudflare screen\nwill display a string starting with cfut_.\nCopy and paste that.";
+"wizard.error.no_zones" = "No domains are registered in Cloudflare.\nAdd a domain in the Cloudflare dashboard first.\n\nhttps://dash.cloudflare.com";
+"wizard.step2.title" = "Step 2: Select a Domain";
+"wizard.step2.body" = "Choose the domain to use for MacRemoteMCP's fixed URL.\n\nExample: choosing appserver.tokyo\n→ gives you a URL like mac-remote.appserver.tokyo.";
+"wizard.step3.title" = "Step 3: Choose a Subdomain";
+"wizard.step3.body.format" = "Enter the subdomain name you'd like to use.\n\nExample: entering \"mac-remote\"\n→ lets you access it at https://mac-remote.%@\n\n* Only letters, numbers, and hyphens are allowed";
+"wizard.button.create" = "Create!";
+"wizard.error.subdomain_empty" = "Please enter a subdomain.";
+"wizard.error.connection_failed" = "Could not connect to Cloudflare.\nCheck your internet connection.";
+"wizard.error.unknown_short" = "Unknown error";
+"wizard.error.api_generic" = "The Cloudflare API returned an error.\nCheck your API token's permissions.";
+"wizard.error.unknown" = "An unknown error occurred.";
+"wizard.error.auth" = "Authentication error: The API token is invalid.\nCreate a new token.";
+"wizard.error.permission" = "Permission error: This API token lacks the required permissions.\nCheck the Tunnel/DNS/Zone/Account settings permissions.";
+"wizard.error.duplicate" = "Already-exists error: A resource with the same name already exists.\nTry a different name, or check it in the Cloudflare dashboard.";
+"wizard.error.notfound" = "Not found: The specified resource does not exist.";
+"wizard.error.ratelimit" = "Rate limited: Too many requests. Wait a moment and try again.";
+"wizard.error.dns_duplicate" = "A DNS record already exists.\nTry a different subdomain, or delete the existing record in the Cloudflare dashboard.";
+"wizard.error.generic.format" = "Error (%d): %@";
+
+/* ── Shared ─────────────────────────────────────────────── */
+"common.cancel" = "Cancel";
+"common.error.title" = "Error";
