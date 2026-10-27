@@ -11,7 +11,7 @@ class TunnelSetupWizard {
         // Step 2: List zones, pick domain
         guard let zones = fetchZones(apiToken: apiToken) else {
             let testData = cfAPI(path: "/client/v4/zones?per_page=1", apiToken: apiToken)
-            showError("ドメイン一覧の取得に失敗しました。\n\n" + extractError(from: testData))
+            showError(L("wizard.error.zones_fetch_failed") + "\n\n" + extractError(from: testData))
             completion(nil); return
         }
         guard let zone = pickZone(zones: zones) else { completion(nil); return }
@@ -22,14 +22,14 @@ class TunnelSetupWizard {
 
         // Step 4: Create tunnel
         guard let accountId = fetchAccountId(apiToken: apiToken) else {
-            showError("アカウントIDの取得に失敗しました。")
+            showError(L("wizard.error.accountid_failed"))
             completion(nil); return
         }
 
         let tunnelName = "mac-remote-mcp-\(subdomain)"
         let tunnelResult = createTunnelWithError(apiToken: apiToken, accountId: accountId, name: tunnelName)
         guard let tunnel = tunnelResult.tunnel else {
-            showError("トンネルの作成に失敗しました。\n\n" + extractError(from: tunnelResult.rawResponse))
+            showError(L("wizard.error.tunnel_create_failed") + "\n\n" + extractError(from: tunnelResult.rawResponse))
             completion(nil); return
         }
 
@@ -48,18 +48,18 @@ class TunnelSetupWizard {
         )
         let dnsOk = dnsResult?["success"] as? Bool ?? false
         if !dnsOk {
-            showError("DNS設定に失敗しました。\n\n" + extractError(from: dnsResult))
+            showError(L("wizard.error.dns_failed") + "\n\n" + extractError(from: dnsResult))
         }
 
         // Step 6: Configure tunnel ingress
         let configOk = configureTunnel(apiToken: apiToken, accountId: accountId, tunnelId: tunnel.id, hostname: hostname)
         if !configOk {
-            showError("トンネル設定に一部失敗しましたが、トークンは取得できています。")
+            showError(L("wizard.error.tunnel_config_partial"))
         }
 
         // Step 7: Get tunnel token
         guard let token = getTunnelToken(apiToken: apiToken, accountId: accountId, tunnelId: tunnel.id) else {
-            showError("トンネルトークンの取得に失敗しました。")
+            showError(L("wizard.error.token_failed"))
             completion(nil); return
         }
 
@@ -82,14 +82,9 @@ class TunnelSetupWizard {
 
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.messageText = "固定URLの設定が完了しました！"
-        alert.informativeText = """
-        URL: https://\(hostname)
-        MCP: https://\(hostname)/mcp
-
-        「再起動」を押すと新しい設定で起動します。
-        """
-        alert.addButton(withTitle: "再起動")
+        alert.messageText = L("wizard.success.title")
+        alert.informativeText = L("wizard.success.body.format", hostname, hostname)
+        alert.addButton(withTitle: L("wizard.button.restart"))
         alert.runModal()
 
         completion(token)
@@ -102,32 +97,14 @@ class TunnelSetupWizard {
 
     private static func askApiToken() -> String? {
         let alert = NSAlert()
-        alert.messageText = "Step 1: Cloudflare APIトークンを作成"
-        alert.informativeText = """
-        まだトークンを持っていない場合：
-        ━━━━━━━━━━━━━━━━━━━━━━
-        ① 下の「Cloudflareを開く」をクリック
-        ② 「カスタムトークンを作成する」の横の
-            「始める」ボタンをクリック
-        ③ トークン名に適当な名前を入力
-            （例: MAC-MCP）
-        ④ 「権限」の欄に以下の4行を追加：
-            アカウント ／ Cloudflare Tunnel ／ 編集
-            アカウント ／ アカウント設定 ／ 読み取り
-            ゾーン ／ DNS ／ 編集
-            ゾーン ／ ゾーン ／ 読み取り
-        ⑤ 下の「概要に進む」をクリック
-        ⑥ 「トークンを作成する」をクリック
-        ⑦ 表示された cfut_xxxxx... をコピー
-        ━━━━━━━━━━━━━━━━━━━━━━
-        コピーしたトークンを下に貼り付けてください。
-        """
-        alert.addButton(withTitle: "次へ")
-        alert.addButton(withTitle: "Cloudflareを開く")
-        alert.addButton(withTitle: "キャンセル")
+        alert.messageText = L("wizard.step1.title")
+        alert.informativeText = L("wizard.step1.body")
+        alert.addButton(withTitle: L("wizard.button.next"))
+        alert.addButton(withTitle: L("wizard.button.opencloudflare"))
+        alert.addButton(withTitle: L("common.cancel"))
 
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 400, height: 24))
-        input.placeholderString = "ここにトークンを貼り付け（cfut_で始まる文字列）"
+        input.placeholderString = L("wizard.token.placeholder")
         input.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         alert.accessoryView = input
 
@@ -140,7 +117,7 @@ class TunnelSetupWizard {
 
         let token = input.stringValue.trimmingCharacters(in: .whitespaces)
         if token.isEmpty {
-            showError("トークンが入力されていません。\nCloudflareの画面で「トークンを作成する」を押すと\ncfut_で始まる文字列が表示されます。\nそれをコピーして貼り付けてください。")
+            showError(L("wizard.error.token_empty"))
             return nil
         }
         return token
@@ -161,15 +138,15 @@ class TunnelSetupWizard {
 
     private static func pickZone(zones: [Zone]) -> Zone? {
         if zones.isEmpty {
-            showError("Cloudflareにドメインが登録されていません。\n先にCloudflareのダッシュボードでドメインを追加してください。\n\nhttps://dash.cloudflare.com")
+            showError(L("wizard.error.no_zones"))
             return nil
         }
 
         let alert = NSAlert()
-        alert.messageText = "Step 2: ドメインを選択"
-        alert.informativeText = "MacRemoteMCPの固定URLに使うドメインを選んでください。\n\n例: appserver.tokyo を選ぶと\n→ mac-remote.appserver.tokyo のようなURLになります。"
-        alert.addButton(withTitle: "次へ")
-        alert.addButton(withTitle: "キャンセル")
+        alert.messageText = L("wizard.step2.title")
+        alert.informativeText = L("wizard.step2.body")
+        alert.addButton(withTitle: L("wizard.button.next"))
+        alert.addButton(withTitle: L("common.cancel"))
 
         let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 300, height: 28))
         for zone in zones {
@@ -186,18 +163,10 @@ class TunnelSetupWizard {
 
     private static func askSubdomain(domain: String) -> String? {
         let alert = NSAlert()
-        alert.messageText = "Step 3: サブドメインを決める"
-        alert.informativeText = """
-        好きなサブドメイン名を入力してください。
-
-        例: 「mac-remote」と入力すると
-        → https://mac-remote.\(domain)
-        　にアクセスできるようになります。
-
-        ※ 英数字とハイフンのみ使えます
-        """
-        alert.addButton(withTitle: "作成する！")
-        alert.addButton(withTitle: "キャンセル")
+        alert.messageText = L("wizard.step3.title")
+        alert.informativeText = L("wizard.step3.body.format", domain)
+        alert.addButton(withTitle: L("wizard.button.create"))
+        alert.addButton(withTitle: L("common.cancel"))
 
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
         input.stringValue = "mac-remote"
@@ -209,7 +178,7 @@ class TunnelSetupWizard {
             .lowercased()
             .replacingOccurrences(of: " ", with: "-")
         guard !sub.isEmpty else {
-            showError("サブドメインを入力してください。")
+            showError(L("wizard.error.subdomain_empty"))
             return nil
         }
         return sub
@@ -334,16 +303,16 @@ class TunnelSetupWizard {
         }
     }
 
-    /// Extract error message from Cloudflare API response and translate common ones to Japanese
+    /// Extract error message from Cloudflare API response and translate common ones for the user
     static func extractError(from data: [String: Any]?) -> String {
         guard let data = data else {
-            return "Cloudflareに接続できませんでした。\nインターネット接続を確認してください。"
+            return L("wizard.error.connection_failed")
         }
 
         if let errors = data["errors"] as? [[String: Any]] {
             let messages = errors.compactMap { error -> String? in
                 let code = error["code"] as? Int ?? 0
-                let msg = error["message"] as? String ?? "不明なエラー"
+                let msg = error["message"] as? String ?? L("wizard.error.unknown_short")
                 return translateError(code: code, message: msg)
             }
             if !messages.isEmpty {
@@ -352,35 +321,35 @@ class TunnelSetupWizard {
         }
 
         if let success = data["success"] as? Bool, !success {
-            return "Cloudflare APIがエラーを返しました。\nAPIトークンの権限を確認してください。"
+            return L("wizard.error.api_generic")
         }
 
-        return "不明なエラーが発生しました。"
+        return L("wizard.error.unknown")
     }
 
     private static func translateError(code: Int, message: String) -> String {
         // Common Cloudflare error translations
         let lower = message.lowercased()
         if lower.contains("authentication") || lower.contains("unauthorized") || code == 10000 {
-            return "認証エラー: APIトークンが無効です。\n新しいトークンを作成してください。"
+            return L("wizard.error.auth")
         }
         if lower.contains("permission") || lower.contains("forbidden") {
-            return "権限エラー: このAPIトークンに必要な権限がありません。\nTunnel/DNS/Zone/Account設定の権限を確認してください。"
+            return L("wizard.error.permission")
         }
         if lower.contains("already exists") || lower.contains("duplicate") {
-            return "既に存在するエラー: 同じ名前のリソースが既に作成されています。\n別の名前を試すか、Cloudflareダッシュボードで確認してください。"
+            return L("wizard.error.duplicate")
         }
         if lower.contains("not found") {
-            return "見つかりません: 指定されたリソースが存在しません。"
+            return L("wizard.error.notfound")
         }
         if lower.contains("rate limit") {
-            return "レート制限: リクエストが多すぎます。少し待ってから再試行してください。"
+            return L("wizard.error.ratelimit")
         }
         if lower.contains("record already exists") || code == 81057 || code == 81058 {
-            return "DNSレコードが既に存在します。\n別のサブドメインを試すか、Cloudflareダッシュボードで既存のレコードを削除してください。"
+            return L("wizard.error.dns_duplicate")
         }
         // Return original with code
-        return "エラー(\(code)): \(message)"
+        return L("wizard.error.generic.format", code, message)
     }
 
     // MARK: - Helpers
@@ -388,7 +357,7 @@ class TunnelSetupWizard {
     private static func showError(_ message: String) {
         let alert = NSAlert()
         alert.alertStyle = .critical
-        alert.messageText = "エラー"
+        alert.messageText = L("common.error.title")
         alert.informativeText = message
         alert.runModal()
     }

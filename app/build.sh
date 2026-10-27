@@ -23,6 +23,7 @@ swiftc \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
   "$APP_DIR/Logic.swift" \
+  "$APP_DIR/Localization.swift" \
   "$APP_DIR/PermissionChecker.swift" \
   "$APP_DIR/SettingsWindow.swift" \
   "$APP_DIR/TunnelSetupWizard.swift"
@@ -36,8 +37,10 @@ if swiftc \
   "$APP_DIR/ProcessManager.swift" \
   "$APP_DIR/Config.swift" \
   "$APP_DIR/Logic.swift" \
+  "$APP_DIR/Localization.swift" \
   "$APP_DIR/PermissionChecker.swift" \
-  "$APP_DIR/SettingsWindow.swift" 2>/dev/null; then
+  "$APP_DIR/SettingsWindow.swift" \
+  "$APP_DIR/TunnelSetupWizard.swift" 2>/dev/null; then
   echo "  Creating universal binary..."
   lipo -create "$BUILD_DIR/MacRemoteMCP" "$BUILD_DIR/MacRemoteMCP_x86" \
     -output "$BUILD_DIR/MacRemoteMCP_universal"
@@ -65,6 +68,13 @@ echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 if [ -f "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" ]; then
   cp "$APP_DIR/MacRemoteMCP-Permissions.mobileconfig" "$APP_BUNDLE/Contents/Resources/"
 fi
+
+# Copy localization bundles (en.lproj / ja.lproj)
+for LPROJ in "$APP_DIR"/*.lproj; do
+  if [ -d "$LPROJ" ]; then
+    cp -r "$LPROJ" "$APP_BUNDLE/Contents/Resources/"
+  fi
+done
 
 # Convert icon
 if [ -d "$APP_DIR/AppIcon.iconset" ]; then

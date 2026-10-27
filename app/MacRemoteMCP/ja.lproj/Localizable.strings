@@ -1,0 +1,132 @@
+/* MacRemoteMCP — 日本語ローカライズ（オリジナルの文言） */
+
+/* ── Menu Bar: AppDelegate ─────────────────────────────── */
+"menu.status.initial" = "状態：停止中";
+"menu.apikey.loading" = "APIキー：読込中...";
+"menu.apikey.format" = "APIキー：%@...（クリックでコピー）";
+"menu.apikey.copied" = "✓ クリップボードにコピーしました";
+"menu.server.start" = "▶ MCPサーバーを起動";
+"menu.server.stop" = "⏹ MCPサーバーを停止";
+"menu.playwright.start" = "▶ Playwrightを起動";
+"menu.playwright.stop" = "⏹ Playwrightを停止";
+"menu.caffeinate.start" = "▶ スリープ防止を開始";
+"menu.caffeinate.stop" = "⏹ スリープ防止を解除";
+"menu.tunnel.disconnected" = "🌐 トンネル：未接続";
+"menu.tunnel.connecting" = "🌐 トンネル：接続中...";
+"menu.tunnel.notrunning" = "🌐 トンネル未稼働";
+"menu.tunnel.copied.format" = "✓ コピー完了：%@";
+"menu.tunnel.quickstart" = "▶ クイックトンネル開始（無料）";
+"menu.tunnel.fixed.start" = "▶ 固定トンネル開始";
+"menu.tunnel.stop" = "⏹ トンネルを停止";
+"menu.tunnel.copyurl" = "MCP URLをコピー";
+"menu.startall" = "すべて起動";
+"menu.stopall" = "すべて停止";
+"menu.logs.open" = "ログを開く...";
+"menu.settings.edit" = "設定を編集...";
+"menu.permissions.setup" = "権限を設定...";
+"menu.profile.install" = "構成プロファイルをインストール...";
+"menu.quit" = "MacRemoteMCPを終了";
+"menu.status.running.online" = "● 稼働中 — オンライン公開中";
+"menu.status.running.local" = "● 稼働中（ローカルのみ）";
+"menu.status.partial" = "◐ 一部稼働中";
+"menu.status.idle" = "○ 停止中";
+"a11y.status.running" = "稼働中";
+"a11y.status.partial" = "一部";
+"a11y.status.stopped" = "停止";
+
+/* ── ProcessManager (app.log / NSLog) ─────────────────────── */
+"log.server.started.format" = "MCPサーバー起動 (PID: %d)";
+"log.server.start_failed.format" = "MCPサーバー起動失敗: %@";
+"log.server.stopped" = "MCPサーバー停止";
+"log.playwright.started.format" = "Playwright起動 (PID: %d)";
+"log.playwright.start_failed.format" = "Playwright起動失敗: %@";
+"log.playwright_proxy.started.format" = "Playwrightプロキシ起動 (PID: %d)";
+"log.playwright_proxy.start_failed.format" = "Playwright起動失敗 Proxy: %@";
+"log.playwright.stopped" = "Playwright停止";
+"log.caffeinate.started.format" = "スリープ防止開始 (PID: %d)";
+"log.caffeinate.start_failed.format" = "スリープ防止開始失敗: %@";
+"log.caffeinate.stopped" = "スリープ防止解除";
+"log.cloudflared.notfound" = "cloudflaredが見つかりません。インストール: brew install cloudflared";
+"log.tunnel.fixed.starting" = "固定トンネル起動中（トークン使用）...";
+"log.tunnel.url.fixed.format" = "トンネルURL（固定）: %@";
+"log.tunnel.url.format" = "トンネルURL: %@";
+"log.tunnel.quick.starting.format" = "クイックトンネル起動中 (PID: %d)...";
+"log.tunnel.fixed.starting.format" = "固定トンネル起動中 (PID: %d)...";
+"log.tunnel.quick.failed.format" = "クイックトンネル起動失敗: %@";
+"log.tunnel.stopped" = "トンネル停止";
+"log.server.wait_timeout" = "サーバー起動待ちタイムアウト（15秒）— トンネルを強制起動";
+"log.server.health_confirmed" = "MCPサーバー応答確認 — トンネル起動";
+
+/* ── PermissionChecker ─────────────────────────────────── */
+"permission.accessibility" = "アクセシビリティ";
+"permission.screenrecording" = "画面収録";
+"permission.alert.title" = "権限の設定が必要です";
+"permission.alert.item.format" = "・%@ ❌";
+"permission.alert.body.format" = "MacRemoteMCPの動作に以下の権限が必要です：\n\n%@\n\n「設定を開く」をクリックすると、\n必要な設定画面を順番に開きます。\n各画面でMacRemoteMCPまたはnodeをONにしてください。";
+"permission.button.opensettings" = "設定を開く";
+"permission.button.later" = "後で設定";
+"permission.profile.panel.title" = "構成プロファイルを選択";
+"permission.profile.panel.message" = "MacRemoteMCP-Permissions.mobileconfig を選択してください";
+
+/* ── SettingsWindow ─────────────────────────────────────── */
+"settings.window.title" = "MacRemoteMCP 設定";
+"settings.apikey.label" = "APIキー";
+"settings.button.copy" = "コピー";
+"settings.button.regenerate" = "再生成";
+"settings.ports.label" = "ポート設定";
+"settings.port.server" = "MCPサーバー";
+"settings.port.playwright" = "Playwright";
+"settings.port.authproxy" = "認証プロキシ";
+"settings.autostart.checkbox" = "アプリ起動時に全サービスを自動開始";
+"settings.cloudflare.label" = "Cloudflare Tunnel（固定URL）";
+"settings.cloudflare.desc" = "空欄＝無料Quick Tunnel（ランダムURL）。トークン入力で固定URL。";
+"settings.cloudflare.token.placeholder" = "自動設定されます（手動入力も可）";
+"settings.cloudflare.setup.button" = "固定URLをセットアップ...";
+"settings.cloudflare.help" = "Cloudflareアカウントがあればボタン1つで完了";
+"settings.permissions.label" = "権限の状態";
+"settings.button.save" = "保存";
+"settings.button.close" = "閉じる";
+"settings.button.editenv" = ".envファイルを直接編集";
+"settings.rotate.confirm.title" = "APIキーを再生成しますか？";
+"settings.rotate.confirm.body" = "現在のキーは無効になります。\nClaude.aiのコネクター設定も更新が必要です。";
+"settings.rotate.done.title" = "APIキーを再生成しました";
+"settings.rotate.done.body" = "新しいキーがクリップボードにコピーされました。\nアプリを再起動すると新しいキーが適用されます。";
+
+/* ── TunnelSetupWizard ──────────────────────────────────── */
+"wizard.error.zones_fetch_failed" = "ドメイン一覧の取得に失敗しました。";
+"wizard.error.accountid_failed" = "アカウントIDの取得に失敗しました。";
+"wizard.error.tunnel_create_failed" = "トンネルの作成に失敗しました。";
+"wizard.error.dns_failed" = "DNS設定に失敗しました。";
+"wizard.error.tunnel_config_partial" = "トンネル設定に一部失敗しましたが、トークンは取得できています。";
+"wizard.error.token_failed" = "トンネルトークンの取得に失敗しました。";
+"wizard.success.title" = "固定URLの設定が完了しました！";
+"wizard.success.body.format" = "URL: https://%@\nMCP: https://%@/mcp\n\n「再起動」を押すと新しい設定で起動します。";
+"wizard.button.restart" = "再起動";
+"wizard.step1.title" = "Step 1: Cloudflare APIトークンを作成";
+"wizard.step1.body" = "まだトークンを持っていない場合：\n━━━━━━━━━━━━━━━━━━━━━━\n① 下の「Cloudflareを開く」をクリック\n② 「カスタムトークンを作成する」の横の\n    「始める」ボタンをクリック\n③ トークン名に適当な名前を入力\n    （例: MAC-MCP）\n④ 「権限」の欄に以下の4行を追加：\n    アカウント ／ Cloudflare Tunnel ／ 編集\n    アカウント ／ アカウント設定 ／ 読み取り\n    ゾーン ／ DNS ／ 編集\n    ゾーン ／ ゾーン ／ 読み取り\n⑤ 下の「概要に進む」をクリック\n⑥ 「トークンを作成する」をクリック\n⑦ 表示された cfut_xxxxx... をコピー\n━━━━━━━━━━━━━━━━━━━━━━\nコピーしたトークンを下に貼り付けてください。";
+"wizard.button.next" = "次へ";
+"wizard.button.opencloudflare" = "Cloudflareを開く";
+"wizard.token.placeholder" = "ここにトークンを貼り付け（cfut_で始まる文字列）";
+"wizard.error.token_empty" = "トークンが入力されていません。\nCloudflareの画面で「トークンを作成する」を押すと\ncfut_で始まる文字列が表示されます。\nそれをコピーして貼り付けてください。";
+"wizard.error.no_zones" = "Cloudflareにドメインが登録されていません。\n先にCloudflareのダッシュボードでドメインを追加してください。\n\nhttps://dash.cloudflare.com";
+"wizard.step2.title" = "Step 2: ドメインを選択";
+"wizard.step2.body" = "MacRemoteMCPの固定URLに使うドメインを選んでください。\n\n例: appserver.tokyo を選ぶと\n→ mac-remote.appserver.tokyo のようなURLになります。";
+"wizard.step3.title" = "Step 3: サブドメインを決める";
+"wizard.step3.body.format" = "好きなサブドメイン名を入力してください。\n\n例: 「mac-remote」と入力すると\n→ https://mac-remote.%@\n　にアクセスできるようになります。\n\n※ 英数字とハイフンのみ使えます";
+"wizard.button.create" = "作成する！";
+"wizard.error.subdomain_empty" = "サブドメインを入力してください。";
+"wizard.error.connection_failed" = "Cloudflareに接続できませんでした。\nインターネット接続を確認してください。";
+"wizard.error.unknown_short" = "不明なエラー";
+"wizard.error.api_generic" = "Cloudflare APIがエラーを返しました。\nAPIトークンの権限を確認してください。";
+"wizard.error.unknown" = "不明なエラーが発生しました。";
+"wizard.error.auth" = "認証エラー: APIトークンが無効です。\n新しいトークンを作成してください。";
+"wizard.error.permission" = "権限エラー: このAPIトークンに必要な権限がありません。\nTunnel/DNS/Zone/Account設定の権限を確認してください。";
+"wizard.error.duplicate" = "既に存在するエラー: 同じ名前のリソースが既に作成されています。\n別の名前を試すか、Cloudflareダッシュボードで確認してください。";
+"wizard.error.notfound" = "見つかりません: 指定されたリソースが存在しません。";
+"wizard.error.ratelimit" = "レート制限: リクエストが多すぎます。少し待ってから再試行してください。";
+"wizard.error.dns_duplicate" = "DNSレコードが既に存在します。\n別のサブドメインを試すか、Cloudflareダッシュボードで既存のレコードを削除してください。";
+"wizard.error.generic.format" = "エラー(%d): %@";
+
+/* ── Shared ─────────────────────────────────────────────── */
+"common.cancel" = "キャンセル";
+"common.error.title" = "エラー";

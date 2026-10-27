@@ -76,23 +76,18 @@ class PermissionChecker {
         if status.allGranted { return }
 
         var missing: [String] = []
-        if !status.accessibility { missing.append("アクセシビリティ") }
-        if !status.screenRecording { missing.append("画面収録") }
+        if !status.accessibility { missing.append(L("permission.accessibility")) }
+        if !status.screenRecording { missing.append(L("permission.screenrecording")) }
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "権限の設定が必要です"
-        alert.informativeText = """
-        MacRemoteMCPの動作に以下の権限が必要です：
-
-        \(missing.map { "・\($0) ❌" }.joined(separator: "\n"))
-
-        「設定を開く」をクリックすると、
-        必要な設定画面を順番に開きます。
-        各画面でMacRemoteMCPまたはnodeをONにしてください。
-        """
-        alert.addButton(withTitle: "設定を開く")
-        alert.addButton(withTitle: "後で設定")
+        alert.messageText = L("permission.alert.title")
+        alert.informativeText = L(
+            "permission.alert.body.format",
+            missing.map { L("permission.alert.item.format", $0) }.joined(separator: "\n")
+        )
+        alert.addButton(withTitle: L("permission.button.opensettings"))
+        alert.addButton(withTitle: L("permission.button.later"))
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
@@ -136,8 +131,8 @@ class PermissionChecker {
 
         // Show Finder file picker if not in bundle
         let panel = NSOpenPanel()
-        panel.title = "構成プロファイルを選択"
-        panel.message = "MacRemoteMCP-Permissions.mobileconfig を選択してください"
+        panel.title = L("permission.profile.panel.title")
+        panel.message = L("permission.profile.panel.message")
         panel.allowedContentTypes = [UTType(filenameExtension: "mobileconfig") ?? .data]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
